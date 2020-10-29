@@ -1,7 +1,5 @@
 from setuptools import setup
 
-from Pyrmafrost import __version__
-
 
 setup(
     name='Pyrmafrost',
@@ -11,7 +9,7 @@ setup(
     #url='https://github.com/nicholas512/Pyrmafrost',
     author='Nick Brown',
     author_email='',
-    py_modules=['Pyrmafrost'],
+    py_modules=['libraries'],
     #test_suite='test_readers',
     classifiers=[
         'Intended Audience :: Developers',
