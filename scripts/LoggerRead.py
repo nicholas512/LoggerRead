@@ -1,9 +1,9 @@
 import argparse
 from pathlib import Path
-from LoggerRead.libraries import readers
+from LoggerReader import readers
 
 fmtdict = {
-    "GP5W": readers.GP5W
+    "GP5W": readers.GP5W,
     "FG2": readers.FG2
 }
 
@@ -12,11 +12,11 @@ def main(args):
     reader = Reader()
 
     print(f"Reading {args.input}")
-    loggerdata = reader.read(args.input)
+    reader.read(args.input)
 
     if args.csv_file:
-        print(f"Reading {args.csv}")
-        loggerdata.DATA.to_csv(args.csv)
+        print(f"Writing data to {args.csv_file}")
+        reader.DATA.to_csv(args.csv_file, index=False)
 
 
 if __name__ == "__main__":
@@ -25,8 +25,8 @@ if __name__ == "__main__":
 
     parser.add_argument("input", help="path to logger file. ")
     parser.add_argument("-f", "--format", dest='format',
-                        help="Whether or not to build directories automatically from a control file")
-    parser.add_argument("-C", "--csv", , default=None, dest='csv_file',
+                        help=f"The type of input file you are using. Chosen from {list(fmtdict.keys())}")
+    parser.add_argument("-C", "--csv", default=None, dest='csv_file',
                         help="Path to csv file to write to")
     
     args = parser.parse_args()
