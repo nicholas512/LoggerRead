@@ -11,7 +11,7 @@ setup(
     author='Nick Brown',
     author_email='',
     py_modules=['LoggerReader'],
-    install_requires=['pandas']
+    install_requires=['pandas'],
     #test_suite='test_readers',
     classifiers=[
         'Intended Audience :: Developers',
