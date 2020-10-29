@@ -26,18 +26,19 @@ class AbstractReader(object):
 
 class FG2(AbstractReader):
     DATEFMT = "%d.%m.%Y %H:%M:%S"
-    
+    DELIMITER = ","
+
     def read(self, file):
         with open(file, 'r') as f:
             for line in f:
                 if self._is_header(line):
-                    delimiters = line.count(",")
-                    columns = line.strip().split(',')
+                    delimiters = line.count(self.DELIMITER)
+                    columns = line.strip().split(self.DELIMITER)
 
                 elif self._is_observation(line):
                     line = line.strip()
-                    line += "," * (delimiters - line.count(","))
-                    self.DATA.append(line.split(','))
+                    line += self.DELIMITER * (delimiters - line.count(self.DELIMITER))
+                    self.DATA.append(line.split(self.DELIMITER))
 
                 else:
                     self.META.append(line)
@@ -50,10 +51,10 @@ class FG2(AbstractReader):
         return re.search("^<.*>$", line)
     
     def _is_observation(self, line):
-        return re.search("^\d*,\d\d.\d\d", line)
+        return re.search(f"^\d*{self.DELIMITER}\d\d.\d\d", line)
         
     def _is_header(self, line):
-        return re.search("NO,TIME", line)
+        return re.search(f"NO{self.DELIMITER}TIME", line)
 
 
         
