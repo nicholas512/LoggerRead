@@ -1,4 +1,4 @@
-# Pyrmafrost
+# About
 Generic file reader for permafrost-related dataloggers
 
 # Format
