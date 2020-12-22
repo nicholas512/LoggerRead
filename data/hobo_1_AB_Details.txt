@@ -1,0 +1,133 @@
+﻿Details
+Series: Temp, °C
+	Devices
+		Device Info
+			• Product: HOBO U23-003 Temp/Temp
+			• Serial Number: 10384870
+			• Version Number: 1.09
+			• Manufacturer: Onset Computer Corporation
+			• Device Memory: 65536
+			• Header Created: 07/10/13 01:48:42 GMT-04:00 PM
+	Deployment Info
+		• Full Series Name: Temperature, °C
+		• Launch Name: 10384870
+		• Deployment Number: 2
+		• Launch Time: 08/22/13 03:45:09 GMT-04:00 PM
+		• Logging Interval: 02 Hr 00 Min 00 Sec
+		• Launch GMT Offset: -4 Hr 0 Min
+		• Battery at Launch: 3.49 Volts
+		• Launching Program: HOBOware Pro-3.3.0_0112_Windows
+	Series Statistics
+		• Samples: 17,005
+		• Max: 21.867
+		• Min: -33.296
+		• Avg: -1.645
+		• Std Dev (σ): 8.520
+		• First Sample Time: 08/22/13 04:00:00 GMT-04:00 PM
+		• Last Sample Time: 07/09/17 04:00:00 GMT-04:00 PM
+Series: Temp, °C
+	Devices
+		Device Info
+			• Product: HOBO U23-003 Temp/Temp
+			• Serial Number: 10384870
+			• Version Number: 1.09
+			• Manufacturer: Onset Computer Corporation
+			• Device Memory: 65536
+			• Header Created: 07/10/13 01:48:42 GMT-04:00 PM
+	Deployment Info
+		• Full Series Name: Temperature, °C
+		• Launch Name: 10384870
+		• Deployment Number: 2
+		• Launch Time: 08/22/13 03:45:09 GMT-04:00 PM
+		• Logging Interval: 02 Hr 00 Min 00 Sec
+		• Launch GMT Offset: -4 Hr 0 Min
+		• Battery at Launch: 3.49 Volts
+		• Launching Program: HOBOware Pro-3.3.0_0112_Windows
+	Series Statistics
+		• Samples: 17,005
+		• Max: 21.891
+		• Min: -33.218
+		• Avg: -1.640
+		• Std Dev (σ): 8.530
+		• First Sample Time: 08/22/13 04:00:00 GMT-04:00 PM
+		• Last Sample Time: 07/09/17 04:00:00 GMT-04:00 PM
+Event Type: Coupler Detached
+	Devices
+		Device Info
+			• Product: HOBO U23-003 Temp/Temp
+			• Serial Number: 10384870
+			• Version Number: 1.09
+			• Manufacturer: Onset Computer Corporation
+			• Device Memory: 65536
+			• Header Created: 07/10/13 01:48:42 GMT-04:00 PM
+	Deployment Info
+		• Full Series Name: Coupler Detached
+		• Launch Name: 10384870
+		• Deployment Number: 2
+		• Launch Time: 08/22/13 03:45:09 GMT-04:00 PM
+		• Launch GMT Offset: -4 Hr 0 Min
+		• Battery at Launch: 3.49 Volts
+	Series Statistics
+		• Samples: 1
+		• First Sample Time: 08/22/13 04:00:00 GMT-04:00 PM
+		• Last Sample Time: 08/22/13 04:00:00 GMT-04:00 PM
+Event Type: Coupler Attached
+	Devices
+		Device Info
+			• Product: HOBO U23-003 Temp/Temp
+			• Serial Number: 10384870
+			• Version Number: 1.09
+			• Manufacturer: Onset Computer Corporation
+			• Device Memory: 65536
+			• Header Created: 07/10/13 01:48:42 GMT-04:00 PM
+	Deployment Info
+		• Full Series Name: Coupler Attached
+		• Launch Name: 10384870
+		• Deployment Number: 2
+		• Launch Time: 08/22/13 03:45:09 GMT-04:00 PM
+		• Launch GMT Offset: -4 Hr 0 Min
+		• Battery at Launch: 3.49 Volts
+	Series Statistics
+		• Samples: 1
+		• First Sample Time: 07/09/17 05:08:10 GMT-04:00 PM
+		• Last Sample Time: 07/09/17 05:08:10 GMT-04:00 PM
+Event Type: Host Connected
+	Devices
+		Device Info
+			• Product: HOBO U23-003 Temp/Temp
+			• Serial Number: 10384870
+			• Version Number: 1.09
+			• Manufacturer: Onset Computer Corporation
+			• Device Memory: 65536
+			• Header Created: 07/10/13 01:48:42 GMT-04:00 PM
+	Deployment Info
+		• Full Series Name: Host Connected
+		• Launch Name: 10384870
+		• Deployment Number: 2
+		• Launch Time: 08/22/13 03:45:09 GMT-04:00 PM
+		• Launch GMT Offset: -4 Hr 0 Min
+		• Battery at Launch: 3.49 Volts
+	Series Statistics
+		• Samples: 1
+		• First Sample Time: 07/09/17 05:08:10 GMT-04:00 PM
+		• Last Sample Time: 07/09/17 05:08:10 GMT-04:00 PM
+Event Type: End Of File
+	Devices
+		Device Info
+			• Product: HOBO U23-003 Temp/Temp
+			• Serial Number: 10384870
+			• Version Number: 1.09
+			• Manufacturer: Onset Computer Corporation
+			• Device Memory: 65536
+			• Header Created: 07/10/13 01:48:42 GMT-04:00 PM
+	Deployment Info
+		• Full Series Name: End Of File
+		• Launch Name: 10384870
+		• Deployment Number: 2
+		• Launch Time: 08/22/13 03:45:09 GMT-04:00 PM
+		• Launch GMT Offset: -4 Hr 0 Min
+		• Battery at Launch: 3.49 Volts
+	Series Statistics
+		• Samples: 1
+		• First Sample Time: 07/09/17 05:08:10 GMT-04:00 PM
+		• Last Sample Time: 07/09/17 05:08:10 GMT-04:00 PM
