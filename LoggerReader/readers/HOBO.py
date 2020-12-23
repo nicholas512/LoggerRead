@@ -248,10 +248,10 @@ class HOBOProperties:
         """ """
         return {x: getattr(self, x) for x in self.DEFAULTS.keys()}
 
-    def detect_date_separator(self, raw):
+    def detect_date_separator(self, lines):
         """ Detect the 'date_separator' property from a file."""
         pass
 
-    def detect_separator(self, raw):
+    def detect_separator(self, lines):
         """ Detect the 'separator' property from a file."""
         pass
