@@ -311,7 +311,26 @@ class HOBOProperties:
 
     @staticmethod
     def detect_fractional_seconds(lines):
-        pass
+        """ Once you find a fractional second, check if all subsequent lines have them"""
+        detected = False
+        pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d")
+        iterate = iter(lines)
+        
+        while not detected:  # Get to the first matching line
+            try:
+                line = next(iterate)
+            except StopIteration:
+                return False  # ran through all lines
+            
+            if pattern.search(line):
+                detected = True
+
+        for remaining_line in iterate:  # All subsequent lines must match
+            if not pattern.search(remaining_line):
+                return False
+        
+        return True
+
 
     @staticmethod
     def detect_include_plot_details(lines):

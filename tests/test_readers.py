@@ -111,6 +111,12 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
         self.assertFalse(readers.HOBOProperties.detect_separate_date_and_time(self.default_lines))
         self.assertFalse(readers.HOBOProperties.detect_separate_date_and_time(self.minimal_lines))
         self.assertTrue(readers.HOBOProperties.detect_separate_date_and_time(self.var1_lines))
+
+    def test_detect_always_show_fractional_seconds(self):
+        self.assertTrue(readers.HOBOProperties.detect_fractional_seconds(self.classic_lines))
+        self.assertFalse(readers.HOBOProperties.detect_fractional_seconds(self.default_lines))
+        self.assertFalse(readers.HOBOProperties.detect_fractional_seconds(self.minimal_lines))
+
         
 if __name__ == '__main__':
     unittest.main()
