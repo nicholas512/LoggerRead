@@ -13,6 +13,6 @@ class AbstractReader(object):
     @abstractmethod
     def read(self, file):
         """read data from a file"""
-        
+
     def get_data(self):
         return self.DATA
