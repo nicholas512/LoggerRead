@@ -54,5 +54,63 @@ class TestGP5W_260(unittest.TestCase):
         self.assertGreater(self.reader.get_data().iloc[100,0], self.reader.get_data().iloc[10,0])
 
 
+class TestHoboProperties(unittest.TestCase):
+
+    def setUp(self):
+        self.P = readers.HOBOProperties
+
+    def test_date_regex(self):
+        self.assertTrue("%I" in self.P(time_format_24hr=False).time_pattern())
+        self.assertTrue("%H" in self.P(time_format_24hr=True).time_pattern())
+
+
+class TestHOBOPropertiesDetection(unittest.TestCase):
+
+    def setUp(self):
+        self.P = readers.HOBOProperties
+        MAXLINES = 200
+
+        f_classic = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_classic.csv")
+        with open(f_classic, encoding="UTF-8") as f:
+            self.classic_lines = f.readlines()[:MAXLINES]
+
+        f_default = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_defaults.csv")
+        with open(f_default, encoding="UTF-8") as f:
+            self.default_lines = f.readlines()[:MAXLINES]
+
+        f_min = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_minimal.txt")
+        with open(f_min, encoding="UTF-8") as f:
+            self.minimal_lines = f.readlines()[:MAXLINES]
+
+        f_var1 = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB.csv")
+        with open(f_var1, encoding="UTF-8") as f:
+            self.var1_lines = f.readlines()[:MAXLINES]
+
+    def test_separator(self):
+        self.assertEqual(readers.HOBOProperties.detect_separator(self.classic_lines), "\t")
+        self.assertEqual(readers.HOBOProperties.detect_separator(self.default_lines), ",")
+        self.assertEqual(readers.HOBOProperties.detect_separator(self.minimal_lines), ";")
+        
+    def test_date_separator(self):
+        self.assertEqual(readers.HOBOProperties.detect_date_separator(self.classic_lines), "/")
+        self.assertEqual(readers.HOBOProperties.detect_date_separator(self.default_lines), ",")
+        self.assertEqual(readers.HOBOProperties.detect_date_separator(self.minimal_lines), "-")
+
+    def test_plot_details(self):
+        self.assertTrue(readers.HOBOProperties.detect_include_plot_details(self.classic_lines))
+        self.assertFalse(readers.HOBOProperties.detect_include_plot_details(self.default_lines))
+        self.assertFalse(readers.HOBOProperties.detect_include_plot_details(self.minimal_lines))
+
+    def test_24hr(self):
+        self.assertTrue(readers.HOBOProperties.detect_time_format_24hr(self.classic_lines))
+        self.assertFalse(readers.HOBOProperties.detect_time_format_24hr(self.default_lines))
+        self.assertTrue(readers.HOBOProperties.detect_time_format_24hr(self.minimal_lines))
+
+    def test_detect_separate_date_and_time(self):
+        self.assertFalse(readers.HOBOProperties.detect_separate_date_and_time(self.classic_lines))
+        self.assertFalse(readers.HOBOProperties.detect_separate_date_and_time(self.default_lines))
+        self.assertFalse(readers.HOBOProperties.detect_separate_date_and_time(self.minimal_lines))
+        self.assertTrue(readers.HOBOProperties.detect_separate_date_and_time(self.var1_lines))
+        
 if __name__ == '__main__':
     unittest.main()

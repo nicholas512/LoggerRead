@@ -13,6 +13,13 @@ DATA_HEADERS = [  # Taken from HOBOware help manual. Not Complete.
     "rh", "temp", "wind speed", "wind dir", "soil moisture", "amps", "volts"
 ]
 
+DETAILS_KEYWORDS = ["First Sample Time", "Battery at Launch", "Device Info", "Deployment Info"]
+
+# ==== ASSUMPTIONS ====
+MAX_HEADER_LINES = 40
+
+# =====================
+
 
 class HOBO(AbstractReader):
     TZ_REGEX = re.compile(r"GMT\s?[-+]\d\d:\d\d")
@@ -248,10 +255,73 @@ class HOBOProperties:
         """ """
         return {x: getattr(self, x) for x in self.DEFAULTS.keys()}
 
-    def detect_date_separator(self, lines):
+    @staticmethod
+    def detect_date_separator(lines):
         """ Detect the 'date_separator' property from a file."""
         pass
 
-    def detect_separator(self, lines):
+    @staticmethod
+    def detect_separator(lines):
         """ Detect the 'separator' property from a file."""
         pass
+
+    @staticmethod
+    def detect_date_format(lines):
+        pass
+
+    @staticmethod
+    def detect_time_format(lines):
+        pass
+
+    @staticmethod
+    def detect_separate_date_and_time(lines):
+        """ Look for one of two patterns  """
+        separate = re.compile("Date[^ ].*Time")
+        combined = re.compile("Date Time")
+        
+        sep_match = len(list(filter(separate.search, lines)))
+        com_match = len(list(filter(combined.search, lines)))
+
+        if sep_match + com_match > 1:
+            raise ValueError("Duplicate Date or Time headers")
+        
+        if sep_match == 1:
+            return True  # True, they are separate
+        
+        elif com_match == 1:
+            return False  # False, they are not separate
+        
+        else:
+            raise ValueError("Could not find Date, Time headers")
+
+
+
+    @staticmethod
+    def detect_time_format_24hr(lines):
+        """ Look for AM/PM string 
+        - Header rows up top will not include AM/PM strings
+        - "plot details" may contain AM/PM strings
+        """
+        pattern = re.compile(r" (AM|PM).")
+        matches = list(filter(pattern.search, lines))
+        if (len(matches) < MAX_HEADER_LINES):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def detect_fractional_seconds(lines):
+        pass
+
+    @staticmethod
+    def detect_include_plot_details(lines):
+        """ Look for obvious plot details text. """
+        
+        options = "|".join(DETAILS_KEYWORDS)
+        pattern = re.compile(rf"({options})")
+        matches = list(filter(pattern.search, lines))
+        
+        if len(matches) > 3:
+            return True
+        else:
+            return False
