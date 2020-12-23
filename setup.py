@@ -1,6 +1,6 @@
 from setuptools import setup
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 setup(
     name='LoggerReader',
@@ -10,9 +10,9 @@ setup(
     # url='https://github.com/nicholas512/Pyrmafrost',
     author='Nick Brown',
     author_email='',
+    python_requires='>3.5.2',
     py_modules=['LoggerReader'],
     install_requires=['pandas'],
-
     # test_suite='test_readers',
     classifiers=[
         'Intended Audience :: Developers',

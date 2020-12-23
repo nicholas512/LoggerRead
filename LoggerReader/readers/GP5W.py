@@ -2,7 +2,7 @@
 import pandas as pd
 import re
 
-from AbstractReader import AbstractReader
+from .AbstractReader import AbstractReader
 
 
 class GP5W(AbstractReader):

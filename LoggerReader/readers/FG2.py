@@ -31,7 +31,7 @@ class FG2(AbstractReader):
         return re.search("^<.*>$", line)
 
     def _is_observation(self, line):
-        return re.search(f"^\d*{self.DELIMITER}\d\d.\d\d", line)
+        return re.search(fr"^\d*{self.DELIMITER}\d\d.\d\d", line)
 
     def _is_header(self, line):
         return re.search(f"NO{self.DELIMITER}TIME", line)

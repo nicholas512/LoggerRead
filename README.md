@@ -62,9 +62,10 @@ data = hobo.read(classic_file)
 ```
 
 # Format
-Reads data into a pandas dataframe. Column titles are of the format:
+Reads data into a pandas dataframe. When availableColumn titles are of the format:
 
-\<*index*\>_\<*standard name*\>_\<*depth in mm*\> e.g. 1_soil_temperature_500
 
-The date/time column is named *time* and is the first column
+The date/time column is named *time* and is the first column - all other columns retain the column names from the original file.
+
+Where possible, metadata is extracted 
 
