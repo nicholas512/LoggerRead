@@ -1,7 +1,7 @@
 """ Unit tests for readers"""
 import pkg_resources
 import unittest
-from Pyrmafrost.libraries import readers
+from LoggerReader import readers
 
 pkg = "LoggerReader"
 

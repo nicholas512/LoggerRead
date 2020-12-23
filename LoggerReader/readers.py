@@ -37,7 +37,7 @@ class FG2(AbstractReader):
         return re.search("^<.*>$", line)
 
     def _is_observation(self, line):
-        return re.search(rf"^\d*{self.DELIMITER}\d\d.\d\d", line)
+        return re.search(f"^\d*{self.DELIMITER}\d\d.\d\d", line)
 
     def _is_header(self, line):
         return re.search(f"NO{self.DELIMITER}TIME", line)
@@ -66,7 +66,7 @@ class GP5W(AbstractReader):
         self.DATA = self.DATA.drop(["No"], axis=1)
 
     def _is_observation(self, line):
-        return re.search(r"\d*,\d{2}\.\d{2}\.\\d{4}", line)
+        return re.search(r"\d*,\d{2}\.\d{2}\.\d{4}", line)
 
     def _is_header(self, line):
         return re.search("No,Time", line)
