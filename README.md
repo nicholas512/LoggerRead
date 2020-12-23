@@ -4,7 +4,7 @@ A library of file readers for permafrost-related dataloggers.
 # Installation
 To install LoggerReader, follow these instructions:
 
-```
+```bash
 git clone https://github.com/nicholas512/LoggerRead
 cd LoggerRead
 python setup.py develop
@@ -20,7 +20,8 @@ Geoprecision logger format differs between the FG2 and GP5W variants
 Because of the variability of HOBOWare CSV exports, the HOBO reader relies on specifying the configuration
 
 ## The HOBOProperties configuration object
-```
+
+```python
 from LoggerReader.readers import HOBOProperties
 from pathlib import Path
 
@@ -47,7 +48,8 @@ print(Q)
 ```
 
 ## Reading HOBO files with the HOBO object
-```
+
+```python
 from LoggerReader.readers import HOBO, HOBOProperties
 from pathlib import Path
 from pkg_resources import resource_filename
