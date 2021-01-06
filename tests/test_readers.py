@@ -93,7 +93,7 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
         
     def test_date_separator(self):
         self.assertEqual(readers.HOBOProperties.detect_date_separator(self.classic_lines), "/")
-        self.assertEqual(readers.HOBOProperties.detect_date_separator(self.default_lines), ",")
+        self.assertEqual(readers.HOBOProperties.detect_date_separator(self.default_lines), "/")
         self.assertEqual(readers.HOBOProperties.detect_date_separator(self.minimal_lines), "-")
 
     def test_plot_details(self):

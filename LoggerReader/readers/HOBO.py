@@ -3,6 +3,8 @@ import re
 import json
 import pprint
 
+from statistics import mode
+
 from .AbstractReader import AbstractReader
 
 
@@ -258,7 +260,17 @@ class HOBOProperties:
     @staticmethod
     def detect_date_separator(lines):
         """ Detect the 'date_separator' property from a file."""
-        pass
+
+        pattern = re.compile(r"(\d{2})(.)(\d{2}).(\d{2}).\d{2}:\d{2}:\d{2}")
+        date_sep = list()
+
+        for line in lines:
+            match = pattern.search(line)
+
+            if match:
+                date_sep.append(match[2])
+
+        return mode(date_sep)
 
     @staticmethod
     def detect_separator(lines):
