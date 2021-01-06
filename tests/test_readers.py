@@ -132,6 +132,13 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
         self.assertTrue(readers.HOBOProperties.detect_line_number(self.default_lines))
         self.assertFalse(readers.HOBOProperties.detect_line_number(self.minimal_lines))
 
+    def test_quotes_commas(self):
+        self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.classic_lines))
+        self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.default_lines))
+        self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.minimal_lines))
+        self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.var1_lines))
+        self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.var2_lines))
+
         
 if __name__ == '__main__':
     unittest.main()

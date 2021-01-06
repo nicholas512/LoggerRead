@@ -437,3 +437,12 @@ class HOBOProperties:
         
         else:
             return True
+
+    def detect_no_quotes_or_commas(lines):
+        """ Detect whether the 'no quotes or commas' parameter is enabled """
+        header = re.compile('"Date')
+        for line in lines:
+            if header.search(line):
+                return True
+        
+        return False
