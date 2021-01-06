@@ -64,7 +64,7 @@ class TestHoboProperties(unittest.TestCase):
         self.assertTrue("%H" in self.P(time_format_24hr=True).time_pattern())
 
 
-class TestHOBOPropertiesDetection(unittest.TestCase):
+class TestHOBOPropertiesDetectionElements(unittest.TestCase):
 
     def setUp(self):
         self.P = readers.HOBOProperties
@@ -117,15 +117,15 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
         self.assertTrue(readers.HOBOProperties.detect_time_format_24hr(self.minimal_lines))
 
     def test_detect_separate_date_and_time(self):
-        self.assertFalse(readers.HOBOProperties.detect_separate_date_and_time(self.classic_lines))
-        self.assertFalse(readers.HOBOProperties.detect_separate_date_and_time(self.default_lines))
-        self.assertFalse(readers.HOBOProperties.detect_separate_date_and_time(self.minimal_lines))
-        self.assertTrue(readers.HOBOProperties.detect_separate_date_and_time(self.var1_lines))
+        self.assertFalse(readers.HOBOProperties.detect_separate_date_time(self.classic_lines))
+        self.assertFalse(readers.HOBOProperties.detect_separate_date_time(self.default_lines))
+        self.assertFalse(readers.HOBOProperties.detect_separate_date_time(self.minimal_lines))
+        self.assertTrue(readers.HOBOProperties.detect_separate_date_time(self.var1_lines))
 
     def test_detect_always_show_fractional_seconds(self):
-        self.assertTrue(readers.HOBOProperties.detect_fractional_seconds(self.classic_lines))
-        self.assertFalse(readers.HOBOProperties.detect_fractional_seconds(self.default_lines))
-        self.assertFalse(readers.HOBOProperties.detect_fractional_seconds(self.minimal_lines))
+        self.assertTrue(readers.HOBOProperties.detect_always_show_fractional_seconds(self.classic_lines))
+        self.assertFalse(readers.HOBOProperties.detect_always_show_fractional_seconds(self.default_lines))
+        self.assertFalse(readers.HOBOProperties.detect_always_show_fractional_seconds(self.minimal_lines))
 
     def test_detect_line_numbers(self):
         self.assertFalse(readers.HOBOProperties.detect_line_number(self.classic_lines))
@@ -133,12 +133,38 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
         self.assertFalse(readers.HOBOProperties.detect_line_number(self.minimal_lines))
 
     def test_quotes_commas(self):
-        self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.classic_lines))
-        self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.default_lines))
-        self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.minimal_lines))
-        self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.var1_lines))
-        self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.var2_lines))
+        self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.classic_lines))
+        self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.default_lines))
+        self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.minimal_lines))
+        self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.var1_lines))
+        self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.var2_lines))
 
+
+class TestHOBOPropertiesFullDetection(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_classic(self):
+        f_classic = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_classic.csv")
+        detected_properties = readers.HOBOProperties.autodetect(f_classic, 400).get_properties()
+        true_properties = readers.HOBOProperties.CLASSIC
         
+        self.assertEqual(true_properties["include_line_number"], detected_properties["include_line_number"])
+        self.assertEqual(true_properties["always_show_fractional_seconds"], detected_properties["always_show_fractional_seconds"])
+        self.assertEqual(true_properties["separate_date_time"], detected_properties["separate_date_time"])
+        self.assertEqual(true_properties["no_quotes_or_commas"], detected_properties["no_quotes_or_commas"])
+
+    def test_defaults(self):
+        f_classic = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_defaults.csv")
+        detected_properties = readers.HOBOProperties.autodetect(f_classic, 400).get_properties()
+        true_properties = readers.HOBOProperties.DEFAULTS
+        
+        self.assertEqual(true_properties["include_line_number"], detected_properties["include_line_number"])
+        self.assertEqual(true_properties["always_show_fractional_seconds"], detected_properties["always_show_fractional_seconds"])
+        self.assertEqual(true_properties["separate_date_time"], detected_properties["separate_date_time"])
+        self.assertEqual(true_properties["no_quotes_or_commas"], detected_properties["no_quotes_or_commas"])
+
+
 if __name__ == '__main__':
     unittest.main()

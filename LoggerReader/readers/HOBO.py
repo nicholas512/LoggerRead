@@ -203,10 +203,29 @@ class HOBOProperties:
         return hobo_properties
 
     @classmethod
-    def autodetect(cls, file, lines):
-        """ Detect """
-        pass
+    def autodetect(cls, file, n_lines=400):
+        """ Automatically detect properties from a file """
+        print("Detecting file properties, this may take some time...")
 
+        with open(file, encoding="UTF-8") as f:
+            lines = f.readlines()[:n_lines]
+
+        hobo = cls(separator=cls.detect_separator(lines),
+                   include_line_number=cls.detect_line_number(lines),
+                   # include_plot_title_in_header=True,
+                   always_show_fractional_seconds=cls.detect_always_show_fractional_seconds(lines),
+                   separate_date_time=cls.detect_separate_date_time(lines),
+                   no_quotes_or_commas=cls.detect_no_quotes_or_commas(lines),
+                   # include_logger_serial=True,
+                   # include_sensor_serial=True,
+                   date_format=cls.detect_date_format(lines),
+                   date_separator=cls.detect_date_separator(lines),
+                   time_format_24hr=cls.detect_time_format_24hr(lines),
+                   # positive_number_format=1,
+                   # negative_number_format=1,
+                   include_plot_details=cls.detect_include_plot_details(lines))
+        
+        return hobo
 
     def date_pattern(self):
         """ Return the appropriate strptime string to read dates from a HOBO file."""
@@ -260,7 +279,7 @@ class HOBOProperties:
             json.dump(self.get_properties(), json_file)
 
     def get_properties(self):
-        """ """
+        """ Create dictionary-formatted properties """
         return {x: getattr(self, x) for x in self.DEFAULTS.keys()}
 
     @staticmethod
@@ -349,7 +368,7 @@ class HOBOProperties:
         return fmt
 
     @staticmethod
-    def detect_separate_date_and_time(lines):
+    def detect_separate_date_time(lines):
         """ Look for one of two patterns  """
         separate = re.compile("Date[^ ].*Time")
         combined = re.compile("Date Time")
@@ -383,7 +402,7 @@ class HOBOProperties:
             return False
 
     @staticmethod
-    def detect_fractional_seconds(lines):
+    def detect_always_show_fractional_seconds(lines):
         """ Once you find a fractional second, check if all subsequent lines have them"""
         detected = False
         pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d")
@@ -443,6 +462,6 @@ class HOBOProperties:
         header = re.compile('"Date')
         for line in lines:
             if header.search(line):
-                return True
+                return False
         
-        return False
+        return True
