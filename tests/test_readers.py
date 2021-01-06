@@ -68,7 +68,7 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
 
     def setUp(self):
         self.P = readers.HOBOProperties
-        MAXLINES = 200
+        MAXLINES = 500
 
         f_classic = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_classic.csv")
         with open(f_classic, encoding="UTF-8") as f:
@@ -86,6 +86,10 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
         with open(f_var1, encoding="UTF-8") as f:
             self.var1_lines = f.readlines()[:MAXLINES]
 
+        f_var2 = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_var2.csv")
+        with open(f_var2, encoding="UTF-8") as f:
+            self.var2_lines = f.readlines()[:MAXLINES]
+
     def test_separator(self):
         self.assertEqual(readers.HOBOProperties.detect_separator(self.classic_lines), "\t")
         self.assertEqual(readers.HOBOProperties.detect_separator(self.default_lines), ",")
@@ -95,6 +99,12 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
         self.assertEqual(readers.HOBOProperties.detect_date_separator(self.classic_lines), "/")
         self.assertEqual(readers.HOBOProperties.detect_date_separator(self.default_lines), "/")
         self.assertEqual(readers.HOBOProperties.detect_date_separator(self.minimal_lines), "-")
+
+    def test_detect_date_format(self):
+        self.assertEqual(readers.HOBOProperties.detect_date_format(self.classic_lines), "MDY")
+        self.assertEqual(readers.HOBOProperties.detect_date_format(self.default_lines), "MDY")
+        self.assertEqual(readers.HOBOProperties.detect_date_format(self.minimal_lines), "DMY")
+        self.assertEqual(readers.HOBOProperties.detect_date_format(self.var2_lines), "YMD")
 
     def test_plot_details(self):
         self.assertTrue(readers.HOBOProperties.detect_include_plot_details(self.classic_lines))

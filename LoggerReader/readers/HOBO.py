@@ -275,11 +275,72 @@ class HOBOProperties:
     @staticmethod
     def detect_separator(lines):
         """ Detect the 'separator' property from a file."""
-        pass
+        pattern = re.compile(r"\d{2}.\d{2}.\d{2}.\d{2}:\d{2}:\d{2}")
+        choices = [",", ";", "\t"]
+        splits = {key:[] for key in choices}
+
+        for line in lines:
+            match = pattern.search(line)
+
+            if match:
+                for sep in choices:
+                    columns = len(line.split(sep))
+
+                    if columns == 1:
+                        choices.remove(sep)
+
+                    if len(splits[sep]) != 0 and splits[sep][-1] != columns:
+                        choices.remove(sep)
+
+                    splits[sep].append(columns)
+
+            if len(choices) < 1:
+                raise RuntimeError("No possible separators")
+
+            elif len(choices) == 1:
+                return(choices[0])
+
+            else:  # Two or more choices remaining? Use first occurring separator
+                pattern_2 = re.compile(f"({'|'.join(choices)})")
+                for line in lines:
+                    match = pattern.search(line)
+
+                    if match:
+                        return pattern_2.search(line)[0]
 
     @staticmethod
     def detect_date_format(lines):
-        pass
+        """ Detect whether dates are MDY, YMD, or DMY.
+
+        Based on heuristics and the assumption of evenly distributed sampling at
+        frequency greater than monthly.
+        """
+
+        pattern = re.compile(r"(\d{2}).(\d{2}).(\d{2}).\d{2}:\d{2}:\d{2}")
+
+        p1 = list()
+        p2 = list()
+        p3 = list()
+
+        for line in lines:
+            match = pattern.search(line)
+
+            if match:
+                p1.append(int(match[1]))
+                p2.append(int(match[2]))
+                p3.append(int(match[3]))
+
+        if max(p2) > 12:  # Day in middle slot
+            fmt = "MDY"
+
+        else:
+            if len(set(p1)) > len(set(p3)):  # Which is more 'diverse'
+                fmt = "DMY"
+
+            else:
+                fmt = "YMD"
+
+        return fmt
 
     @staticmethod
     def detect_time_format(lines):
