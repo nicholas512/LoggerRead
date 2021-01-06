@@ -127,6 +127,11 @@ class TestHOBOPropertiesDetection(unittest.TestCase):
         self.assertFalse(readers.HOBOProperties.detect_fractional_seconds(self.default_lines))
         self.assertFalse(readers.HOBOProperties.detect_fractional_seconds(self.minimal_lines))
 
+    def test_detect_line_numbers(self):
+        self.assertFalse(readers.HOBOProperties.detect_line_number(self.classic_lines))
+        self.assertTrue(readers.HOBOProperties.detect_line_number(self.default_lines))
+        self.assertFalse(readers.HOBOProperties.detect_line_number(self.minimal_lines))
+
         
 if __name__ == '__main__':
     unittest.main()

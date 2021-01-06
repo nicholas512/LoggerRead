@@ -202,6 +202,12 @@ class HOBOProperties:
 
         return hobo_properties
 
+    @classmethod
+    def autodetect(cls, file, lines):
+        """ Detect """
+        pass
+
+
     def date_pattern(self):
         """ Return the appropriate strptime string to read dates from a HOBO file."""
         if self.date_format not in self.DATE_FORMATS:
@@ -343,35 +349,29 @@ class HOBOProperties:
         return fmt
 
     @staticmethod
-    def detect_time_format(lines):
-        pass
-
-    @staticmethod
     def detect_separate_date_and_time(lines):
         """ Look for one of two patterns  """
         separate = re.compile("Date[^ ].*Time")
         combined = re.compile("Date Time")
-        
+
         sep_match = len(list(filter(separate.search, lines)))
         com_match = len(list(filter(combined.search, lines)))
 
         if sep_match + com_match > 1:
             raise ValueError("Duplicate Date or Time headers")
-        
+
         if sep_match == 1:
             return True  # True, they are separate
-        
+
         elif com_match == 1:
             return False  # False, they are not separate
-        
+
         else:
             raise ValueError("Could not find Date, Time headers")
 
-
-
     @staticmethod
     def detect_time_format_24hr(lines):
-        """ Look for AM/PM string 
+        """ Look for AM/PM string
         - Header rows up top will not include AM/PM strings
         - "plot details" may contain AM/PM strings
         """
@@ -388,32 +388,52 @@ class HOBOProperties:
         detected = False
         pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d")
         iterate = iter(lines)
-        
+
         while not detected:  # Get to the first matching line
             try:
                 line = next(iterate)
             except StopIteration:
                 return False  # ran through all lines
-            
+
             if pattern.search(line):
                 detected = True
 
         for remaining_line in iterate:  # All subsequent lines must match
             if not pattern.search(remaining_line):
                 return False
-        
-        return True
 
+        return True
 
     @staticmethod
     def detect_include_plot_details(lines):
         """ Look for obvious plot details text. """
-        
+
         options = "|".join(DETAILS_KEYWORDS)
         pattern = re.compile(rf"({options})")
         matches = list(filter(pattern.search, lines))
-        
+
         if len(matches) > 3:
             return True
         else:
             return False
+
+    @staticmethod
+    def detect_line_number(lines):
+        """ Detect whether a line number column is present """
+        pattern = re.compile(r"^([0-9]+)[^-/0-9]")
+        last = None
+
+        for line in lines:
+            match = pattern.search(line)
+
+            if match:
+                if last is not None and int(match[1]) < last:
+                    return False
+
+                last = int(match[1])
+
+        if last is None:
+            return False
+        
+        else:
+            return True
