@@ -27,12 +27,17 @@ class HOBO(AbstractReader):
     TZ_REGEX = re.compile(r"GMT\s?[-+]\d\d:\d\d")
     MAX_LINES = 200  # How many lines to check for header, date, etc.
 
-    def __init__(self, properties):
+    def __init__(self, properties=None):
         super().__init__()
+
         self.properties = properties
 
     def read(self, file):
         """ Open a file """
+        if self.properties is None:
+            print("Attempting to detect file properties")
+            self.properties = HOBOProperties.autodetect(file)
+
         with open(file, encoding="UTF-8") as f:  # Get header info
             lines = f.readlines()
         self.extract_header_from_lines(lines)
@@ -45,7 +50,8 @@ class HOBO(AbstractReader):
         data_col = self.extract_data_columns(self.raw_table)
 
         self.DATA = pd.concat([time_col, data_col], axis=1)
-
+        self.DATA.columns = ["Time"] + list(data_col.columns)
+        
         return self.DATA
 
     def extract_header_from_lines(self, lines):
@@ -97,17 +103,24 @@ class HOBO(AbstractReader):
         tzfmt = "%z" if self.tz else ""
 
         if self.properties.separate_date_time:
-            full_date = df["Date"] + df["Time"] + self.tz
+            date_pattern = re.compile("Date")
+            date_header = next(filter(date_pattern.search, df.columns))
+
+            time_pattern = re.compile("Time")
+            time_header = next(filter(time_pattern.search, df.columns))
+
+            full_date = df[date_header] + df[time_header] + self.tz
 
             date_fmt = self.properties.date_pattern() + self.properties.time_pattern() + tzfmt
             TIME = pd.to_datetime(full_date, format=date_fmt)
 
         else:
-            full_date = df["Date Time"] + self.tz
+            datetime_pattern = re.compile("Date Time")
+            datetime_header = next(filter(datetime_pattern.search, df.columns))
+
+            full_date = df[datetime_header] + self.tz
             date_fmt = self.properties.date_pattern() + tzfmt
             TIME = pd.to_datetime(full_date, format=date_fmt)
-
-        TIME.columns = ['Time']
 
         return TIME
 
@@ -262,7 +275,11 @@ class HOBOProperties:
     def header_regex(self):
         """ Return the regular expression to match a header row. """
         if self.separate_date_time:
-            return re.compile(f"Date{self.separator}Time")
+            
+            if self.no_quotes_or_commas:
+                return re.compile(f"Date{self.separator}Time")
+            else:
+                return re.compile(f'Date"{self.separator}"Time')
         else:
             return re.compile("Date Time")
 
@@ -356,14 +373,14 @@ class HOBOProperties:
                 p3.append(int(match[3]))
 
         if max(p2) > 12:  # Day in middle slot
-            fmt = "MDY"
+            fmt = "M D Y"
 
         else:
             if len(set(p1)) > len(set(p3)):  # Which is more 'diverse'
-                fmt = "DMY"
+                fmt = "D M Y"
 
             else:
-                fmt = "YMD"
+                fmt = "Y M D"
 
         return fmt
 
