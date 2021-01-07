@@ -1,5 +1,9 @@
 # About
-A library of file readers for permafrost-related dataloggers. Instead of trying to make a single csv-reader that can handle any format, this treats each datalogger separately.
+A library of file readers for permafrost-related dataloggers. Instead of trying to make a single csv-reader that can handle any format, this treats each datalogger separately. Currently the following data types are supported:
+
+* GeoPrecision (GP5W)
+* GeoPrecision (FG2)
+* HOBO (HOBOware)
 
 # Installation
 To install LoggerReader, follow these instructions:
