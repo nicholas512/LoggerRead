@@ -50,8 +50,8 @@ class HOBO(AbstractReader):
         data_col = self.extract_data_columns(self.raw_table)
 
         self.DATA = pd.concat([time_col, data_col], axis=1)
-        self.DATA.columns = ["Time"] + list(data_col.columns)
-        
+        self.DATA.columns = ["TIME"] + list(data_col.columns)
+
         return self.DATA
 
     def extract_header_from_lines(self, lines):
@@ -237,7 +237,7 @@ class HOBOProperties:
                    # positive_number_format=1,
                    # negative_number_format=1,
                    include_plot_details=cls.detect_include_plot_details(lines))
-        
+
         return hobo
 
     def date_pattern(self):
@@ -275,7 +275,7 @@ class HOBOProperties:
     def header_regex(self):
         """ Return the regular expression to match a header row. """
         if self.separate_date_time:
-            
+
             if self.no_quotes_or_commas:
                 return re.compile(f"Date{self.separator}Time")
             else:
@@ -470,7 +470,7 @@ class HOBOProperties:
 
         if last is None:
             return False
-        
+
         else:
             return True
 
@@ -480,5 +480,5 @@ class HOBOProperties:
         for line in lines:
             if header.search(line):
                 return False
-        
+
         return True

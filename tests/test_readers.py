@@ -94,7 +94,7 @@ class TestHOBOPropertiesDetectionElements(unittest.TestCase):
         self.assertEqual(readers.HOBOProperties.detect_separator(self.classic_lines), "\t")
         self.assertEqual(readers.HOBOProperties.detect_separator(self.default_lines), ",")
         self.assertEqual(readers.HOBOProperties.detect_separator(self.minimal_lines), ";")
-        
+
     def test_date_separator(self):
         self.assertEqual(readers.HOBOProperties.detect_date_separator(self.classic_lines), "/")
         self.assertEqual(readers.HOBOProperties.detect_date_separator(self.default_lines), "/")
@@ -149,7 +149,7 @@ class TestHOBOPropertiesFullDetection(unittest.TestCase):
         f_classic = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_classic.csv")
         detected_properties = readers.HOBOProperties.autodetect(f_classic, 400).get_properties()
         true_properties = readers.HOBOProperties.CLASSIC
-        
+
         self.assertEqual(true_properties["include_line_number"], detected_properties["include_line_number"])
         self.assertEqual(true_properties["always_show_fractional_seconds"], detected_properties["always_show_fractional_seconds"])
         self.assertEqual(true_properties["separate_date_time"], detected_properties["separate_date_time"])
@@ -159,7 +159,7 @@ class TestHOBOPropertiesFullDetection(unittest.TestCase):
         f_classic = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_defaults.csv")
         detected_properties = readers.HOBOProperties.autodetect(f_classic, 400).get_properties()
         true_properties = readers.HOBOProperties.DEFAULTS
-        
+
         self.assertEqual(true_properties["include_line_number"], detected_properties["include_line_number"])
         self.assertEqual(true_properties["always_show_fractional_seconds"], detected_properties["always_show_fractional_seconds"])
         self.assertEqual(true_properties["separate_date_time"], detected_properties["separate_date_time"])
