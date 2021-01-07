@@ -9,6 +9,7 @@ git clone https://github.com/nicholas512/LoggerRead
 cd LoggerRead
 python setup.py develop
 ```
+Consider using a virtual environment, because some dependencies are installed.
 
 # Using LoggerReader
 
