@@ -27,6 +27,8 @@ class FG2(AbstractReader):
         self.DATA["TIME"] = pd.to_datetime(self.DATA["TIME"], format=self.DATEFMT)
         self.DATA = self.DATA.drop(["NO"], axis=1)
 
+        return self.DATA
+
     def _is_metadata(self, line):
         return re.search("^<.*>$", line)
 

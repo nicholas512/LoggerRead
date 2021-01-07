@@ -27,6 +27,8 @@ class GP5W(AbstractReader):
         self.DATA["Time"] = pd.to_datetime(self.DATA["Time"], format=self.DATEFMT)
         self.DATA = self.DATA.drop(["No"], axis=1)
 
+        return self.DATA
+
     def _is_observation(self, line):
         return re.search(r"\d*,\d{2}\.\d{2}\.\d{4}", line)
 
