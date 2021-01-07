@@ -12,6 +12,15 @@ python setup.py develop
 Consider using a virtual environment, because some dependencies are installed.
 
 # Using LoggerReader
+The object that is used to read the logger data will differ depending on what kind of instrument the data comes from. However, each reader follows the same behaviour. They all have the `.read()` method that takes the file name as an argument. You can create the reader object first and then call the `.read()` method, or just run everything on one line.
+
+```python
+Reader().read(file)
+
+""" or """
+reader = Reader()
+data = reader.read(file)
+```
 
 ## GeoPrecision
 Geoprecision logger format differs between the FG2 and GP5W variants. To read a GeoPrecision file, use either the FG2 or GP5W object
@@ -92,7 +101,7 @@ defaults_file = resource_filename("LoggerReader", "sample_files/hobo_1_AB_defaul
 # To autodetect HOBOWare Properties:
 data = HOBO().read(defaults_file)
 
-# To manually specify a HOBOProperties object, initialize a HOBO reader with a 
+# To manually specify a the HOBOWare configuration, initialize the HOBO reader with a HOBOProperties object
 classic_file = resource_filename("LoggerReader", "sample_files/hobo_1_AB_classic.csv")
 classic_properties = HOBOProperties.classic()
 hobo = HOBO(classic_properties)
