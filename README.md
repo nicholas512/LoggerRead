@@ -16,11 +16,13 @@ The object that is used to read the logger data will differ depending on what ki
 
 ```python
 Reader().read(file)
-
-""" or """
+```
+**OR**
+```python
 reader = Reader()
 data = reader.read(file)
 ```
+Some datalogger types may accept or require other information in order to read the file correctly.
 
 ## GeoPrecision
 Geoprecision logger format differs between the FG2 and GP5W variants. To read a GeoPrecision file, use either the FG2 or GP5W object
