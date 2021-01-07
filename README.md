@@ -1,5 +1,5 @@
 # About
-A library of file readers for permafrost-related dataloggers.
+A library of file readers for permafrost-related dataloggers. Instead of trying to make a single csv-reader that can handle any format, this treats each datalogger separately.
 
 # Installation
 To install LoggerReader, follow these instructions:
@@ -10,20 +10,51 @@ cd LoggerRead
 python setup.py develop
 ```
 
-# Using
+# Using LoggerReader
 
 ## GeoPrecision
-Geoprecision logger format differs between the FG2 and GP5W variants
+Geoprecision logger format differs between the FG2 and GP5W variants. To read a GeoPrecision file, use either the FG2 or GP5W object
 ### FG2
+FG2 is the newer software for GeoPrecision instruments:
+
+```python
+from LoggerReader.readers import FG2
+from pkg_resources import resource_filename
+fg2_file = resource_filename("LoggerReader", "sample_files/FG2_399.csv")
+
+# Create an 
+FG2().read(fg2_file)
+```
+
 ### GP5W
+GP5W is the older software for GeoPrecision instruments:
+
+```python
+from LoggerReader.readers import GP5W
+from pkg_resources import resource_filename
+gp5w_file = resource_filename("LoggerReader", "sample_files/GP5W_260.csv")
+
+# To read a file, you might first create a reader object 
+reader = GP5W()
+reader.read(gp5w_file)
+
+# Or instead, read the data in one line
+data = GP5W().read(gp5w_file)
+```
 ## HOBO
-Because of the variability of HOBOWare CSV exports, the HOBO reader relies on specifying the configuration
+Because of the variability of HOBOWare CSV exports, the HOBO reader relies on on a HOBOProperties configuration object. This can be configured manually (most reliable) or autodetected from a file.
 
 ## The HOBOProperties configuration object
 
 ```python
 from LoggerReader.readers import HOBOProperties
+from pkg_resources import resource_filename
 from pathlib import Path
+
+# Autodetect file structure
+hobo_file = resource_filename("LoggerReader", "sample_files/hobo_1_AB_classic.csv")
+P = HOBOProperties.autodetect(hobo_file)
+print(P)
 
 # HOBOWare 'default' format
 print(HOBOProperties.defaults())
@@ -54,7 +85,13 @@ from LoggerReader.readers import HOBO, HOBOProperties
 from pathlib import Path
 from pkg_resources import resource_filename
 
-# initialize a HOBO reader with a HOBOProperties object
+classic_file = resource_filename("LoggerReader", "sample_files/hobo_1_AB_classic.csv")
+defaults_file = resource_filename("LoggerReader", "sample_files/hobo_1_AB_defaults.csv")
+
+# To autodetect HOBOWare Properties:
+data = HOBO().read(defaults_file)
+
+# To manually specify a HOBOProperties object, initialize a HOBO reader with a 
 classic_file = resource_filename("LoggerReader", "sample_files/hobo_1_AB_classic.csv")
 classic_properties = HOBOProperties.classic()
 hobo = HOBO(classic_properties)
@@ -62,10 +99,7 @@ data = hobo.read(classic_file)
 ```
 
 # Format
-Reads data into a pandas dataframe. When availableColumn titles are of the format:
+Reader objects save csv data in a pandas dataframe stored as the `DATA` attribute.  Column titles are left unchanged with the exception of the datetime column which is renamed to `TIME`. It is always the first column in the dataframe.
 
-
-The date/time column is named *time* and is the first column - all other columns retain the column names from the original file.
-
-Where possible, metadata is extracted 
+Where possible, any metadata that is found in the file is stored in a `META` attribute.
 
