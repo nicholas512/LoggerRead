@@ -23,7 +23,7 @@ from LoggerReader.readers import FG2
 from pkg_resources import resource_filename
 fg2_file = resource_filename("LoggerReader", "sample_files/FG2_399.csv")
 
-# Create an 
+# Read an FG2 file
 FG2().read(fg2_file)
 ```
 
