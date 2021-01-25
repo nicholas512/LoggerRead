@@ -9,6 +9,7 @@ class FG2(AbstractReader):
     DELIMITER = ","
 
     def read(self, file):
+        self.META['raw'] = list()
         with open(file, "r") as f:
             for line in f:
                 if self._is_header(line):
@@ -21,7 +22,7 @@ class FG2(AbstractReader):
                     self.DATA.append(line.split(self.DELIMITER))
 
                 else:
-                    self.META.append(line)
+                    self.META['raw'].append(line)
 
         self.DATA = pd.DataFrame(self.DATA, columns=columns)
         self.DATA["TIME"] = pd.to_datetime(self.DATA["TIME"], format=self.DATEFMT)

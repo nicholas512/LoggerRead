@@ -9,6 +9,7 @@ class GP5W(AbstractReader):
     DATEFMT = "%d.%m.%Y %H:%M:%S"
 
     def read(self, file):
+        self.META['raw'] = list()
         with open(file, "r") as f:
             for line in f:
                 if self._is_header(line):
@@ -21,7 +22,7 @@ class GP5W(AbstractReader):
                     self.DATA.append(line.split(","))
 
                 else:
-                    self.META.append(line)
+                    self.META['raw'].append(line)
 
         self.DATA = pd.DataFrame(self.DATA, columns=columns)
         self.DATA["Time"] = pd.to_datetime(self.DATA["Time"], format=self.DATEFMT)

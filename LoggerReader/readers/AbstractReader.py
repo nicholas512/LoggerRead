@@ -6,7 +6,7 @@ class AbstractReader(object):
 
     def __init__(self, datefmt=None):
         self.DATA = []
-        self.META = []
+        self.META = dict()
         if datefmt:
             self.DATEFMT = datefmt
 
