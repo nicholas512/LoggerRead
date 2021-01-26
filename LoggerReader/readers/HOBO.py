@@ -16,6 +16,8 @@ DATA_HEADERS = [  # Taken from HOBOware help manual. Not Complete.
 ]
 
 DETAILS_KEYWORDS = ["First Sample Time", "Battery at Launch", "Device Info", "Deployment Info"]
+DETAILS_HEADERS = ["Series", "Event Type"]
+DETAILS_SUBHEADERS = ["Devices", "Device Info", "Deployment Info", "Series Statistics"]
 
 # ==== ASSUMPTIONS ====
 MAX_HEADER_LINES = 40
@@ -29,7 +31,7 @@ class HOBO(AbstractReader):
 
     def __init__(self, properties=None):
         super().__init__()
-
+        self.tz = None
         self.properties = properties
 
     def read(self, file):
@@ -41,10 +43,15 @@ class HOBO(AbstractReader):
         with open(file, encoding="UTF-8") as f:  # Get header info
             lines = f.readlines()
         self.extract_header_from_lines(lines)
-
+        
+        if self.properties.include_plot_details:
+            self.META['details'] = self.read_details(lines)
+        
+        self.set_tz_offset()
+        
         # Read remaining data as pd DataFrame
         self.raw_table = pd.read_csv(file, delimiter=self.properties.separator,
-                                     skiprows=self.headerline, index_col=False)
+                                     skiprows=self.headerline_i, index_col=False)
 
         time_col = self.create_datetime_column(self.raw_table)
         data_col = self.extract_data_columns(self.raw_table)
@@ -59,8 +66,7 @@ class HOBO(AbstractReader):
         for i, line in enumerate(lines):
             if self.is_header(line):
                 self.headerline = line
-                self.detect_time_zone_from_header_line(line)  # TODO: If "include_plot_details" and no_quotes_or_commas - get time zone elsewhere
-                self.headerline = i
+                self.headerline_i = i
                 break
 
             if i > self.MAX_LINES:
@@ -72,10 +78,29 @@ class HOBO(AbstractReader):
         match = pattern.search(line)
         return bool(match)
 
+    def set_tz_offset(self):
+        """ Find and set time zone offset """
+        if self.tz:
+            return
+        elif self.properties.include_plot_details and self.properties.no_quotes_or_commas and self.META.get('details'):
+            tz = self.detect_time_zone_from_details(self.META.get('details'))
+        else:
+            tz = self.detect_time_zone_from_header_line(self.headerline)
+        
+        self.tz = tz
+        self.META['tz_offset'] = tz
+
     def detect_time_zone_from_header_line(self, line):
         """ Extract time zone from header line """
         tz_match = self.TZ_REGEX.search(line)
-        self.tz = tz_match.group()[-6:].replace(":", "") if tz_match else ""
+        tz = tz_match.group()[-6:].replace(":", "") if tz_match else None
+        return tz
+
+    def detect_time_zone_from_details(self, details):
+        """ Extract time zone from details column as a list of dicts"""
+        tz_match = self.TZ_REGEX.search(self.META.get('details')[0]['First Sample Time'])
+        tz = tz_match.group()[-6:].replace(":", "") if tz_match else None
+        return tz
 
     def is_data_header(self, text):
         """ Determine whether a string represents a column name with data """
@@ -101,6 +126,7 @@ class HOBO(AbstractReader):
     def create_datetime_column(self, df):
         """ Create a pandas datetime Series from a HOBO dataframe """
         tzfmt = "%z" if self.tz else ""
+        tz = self.tz if self.tz else ""
 
         if self.properties.separate_date_time:
             date_pattern = re.compile("Date")
@@ -109,7 +135,7 @@ class HOBO(AbstractReader):
             time_pattern = re.compile("Time")
             time_header = next(filter(time_pattern.search, df.columns))
 
-            full_date = df[date_header] + df[time_header] + self.tz
+            full_date = df[date_header] + df[time_header] + tz
 
             date_fmt = self.properties.date_pattern() + self.properties.time_pattern() + tzfmt
             TIME = pd.to_datetime(full_date, format=date_fmt)
@@ -118,11 +144,35 @@ class HOBO(AbstractReader):
             datetime_pattern = re.compile("Date Time")
             datetime_header = next(filter(datetime_pattern.search, df.columns))
 
-            full_date = df[datetime_header] + self.tz
+            full_date = df[datetime_header] + tz
             date_fmt = self.properties.date_pattern() + tzfmt
             TIME = pd.to_datetime(full_date, format=date_fmt)
 
         return TIME
+
+    def read_details(self, lines):
+        """ Read series details from last column (if they are included)."""
+        meta_pattern = re.compile("(.*?):(.*)$")
+        details = list()
+        current = dict()
+
+        for line in lines:
+            info_column = line.split(self.properties.separator)[-1]
+            match = meta_pattern.search(info_column)
+
+            if match:
+                key, value = match.groups()
+
+                if current != {} and key.strip() in DETAILS_HEADERS:
+                    details.append(current)
+                    current = dict()
+
+                current[key.strip()] = value.strip()
+
+            if details != [] and re.search(r"^\s*$", info_column):  # Stop once details block is over
+                break
+
+        return details
 
 
 class HOBOProperties:
