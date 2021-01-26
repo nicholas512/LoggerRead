@@ -166,5 +166,37 @@ class TestHOBOPropertiesFullDetection(unittest.TestCase):
         self.assertEqual(true_properties["no_quotes_or_commas"], detected_properties["no_quotes_or_commas"])
 
 
+class TestHOBOFileRead(unittest.TestCase):
+
+    def setUp(self):
+        f_classic = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_classic.csv")
+        self.h_classic = readers.HOBO()
+        self.h_classic.read(f_classic)
+        
+        f_default = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_defaults.csv")
+        self.h_default = readers.HOBO()
+        self.h_default.read(f_default)
+
+        f_min = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_minimal.txt")
+        self.h_min = readers.HOBO()
+        self.h_min.read(f_min)
+
+        f_var1 = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB.csv")
+        self.h_var1 = readers.HOBO()
+        self.h_var1.read(f_var1)
+
+        f_var2 = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_var2.csv")
+        self.h_var2 = readers.HOBO()
+        self.h_var2.read(f_var2)
+
+    def test_time_zone_detection(self):
+        self.assertEqual(self.h_classic.META['tz_offset'], "-0700")
+        self.assertEqual(self.h_default.META['tz_offset'], "-0700")
+        self.assertEqual(self.h_min.META['tz_offset'], "-0700")
+        self.assertEqual(self.h_var1.META['tz_offset'], "-0700")
+        self.assertEqual(self.h_var2.META['tz_offset'], "-0700")
+
+
+
 if __name__ == '__main__':
     unittest.main()
