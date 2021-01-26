@@ -80,7 +80,7 @@ print(HOBOProperties.classic())
 
 # Custom format (unspecified properties are defaults)
 P = HOBOProperties(date_separator=",",
-                   date_format="Y M D",
+                   date_format="YMD",
                    include_line_number=True,
                    include_plot_details=False,
                    no_quotes_or_commas=False,

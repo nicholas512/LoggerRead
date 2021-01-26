@@ -176,7 +176,7 @@ class HOBO(AbstractReader):
 
 
 class HOBOProperties:
-    DATE_FORMATS = ["M D Y", "Y M D", "D M Y"]
+    DATE_FORMATS = ["MDY", "YMD", "DMY"]
     POS_N_FMT = [""]
     NEG_N_FMT = [""]
 
@@ -188,7 +188,7 @@ class HOBOProperties:
                 "no_quotes_or_commas": False,
                 "include_logger_serial": True,
                 "include_sensor_serial": True,
-                "date_format": "M D Y",
+                "date_format": "MDY",
                 "date_separator": "/",
                 "time_format_24hr": False,
                 "positive_number_format": 1,
@@ -204,7 +204,7 @@ class HOBOProperties:
                "no_quotes_or_commas": True,
                "include_logger_serial": False,
                "include_sensor_serial": True,
-               "date_format": "M D Y",
+               "date_format": "MDY",
                "date_separator": "/",
                "time_format_24hr": True,
                "positive_number_format": 1,
@@ -223,7 +223,7 @@ class HOBOProperties:
                  no_quotes_or_commas=False,
                  include_logger_serial=True,
                  include_sensor_serial=True,
-                 date_format="M D Y",
+                 date_format="MDY",
                  date_separator="/",
                  time_format_24hr=False,
                  positive_number_format=1,
@@ -295,13 +295,13 @@ class HOBOProperties:
         if self.date_format not in self.DATE_FORMATS:
             raise ValueError(f"Incorrect date pattern. Choose from {self.DATE_FORMATS}")
 
-        if self.date_format == "Y M D":
+        if self.date_format == "YMD":
             pattern = "%y{0}%m{0}%d".format(self.date_separator)
 
-        elif self.date_format == "M D Y":
+        elif self.date_format == "MDY":
             pattern = "%m{0}%d{0}%y".format(self.date_separator)
 
-        elif self.date_format == "D M Y":
+        elif self.date_format == "DMY":
             pattern = "%d{0}%m{0}%y".format(self.date_separator)
 
         if not self.separate_date_time:
@@ -423,14 +423,14 @@ class HOBOProperties:
                 p3.append(int(match[3]))
 
         if max(p2) > 12:  # Day in middle slot
-            fmt = "M D Y"
+            fmt = "MDY"
 
         else:
             if len(set(p1)) > len(set(p3)):  # Which is more 'diverse'
-                fmt = "D M Y"
+                fmt = "DMY"
 
             else:
-                fmt = "Y M D"
+                fmt = "YMD"
 
         return fmt
 
