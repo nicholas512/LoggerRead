@@ -3,7 +3,7 @@ from setuptools import setup
 __version__ = "0.1.0"
 
 setup(
-    name='LoggerRead',
+    name='LoggerReader',
     version=__version__,
     description='A simple module for reading various datalogger output files',
     long_description=open('README.md').read(),
