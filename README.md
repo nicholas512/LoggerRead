@@ -6,8 +6,12 @@ A library of file readers for permafrost-related dataloggers. Instead of trying 
 * HOBO (HOBOware)
 
 # Installation
-To install LoggerReader, follow these instructions:
+To install LoggerReader, the simplest way is to use `pip`:
+```bash
+pip install LoggerReader
+```
 
+If you would prefer to install the lastest version from the source code, 
 ```bash
 git clone https://github.com/nicholas512/LoggerRead
 cd LoggerRead
