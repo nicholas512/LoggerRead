@@ -20,43 +20,62 @@ class TestHOBOPropertiesDetectionElements(unittest.TestCase):
 
     def setUp(self):
         self.P = readers.HOBOProperties
-        MAXLINES = 500
+        MAXLINES = 400
 
         f_classic = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_classic.csv")
         with open(f_classic, encoding="UTF-8") as f:
-            self.classic_lines = f.readlines()[:MAXLINES]
+            lines = f.readlines()
+            self.classic_lines = lines[:MAXLINES] + lines[MAXLINES::1000]
 
         f_default = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_defaults.csv")
         with open(f_default, encoding="UTF-8") as f:
-            self.default_lines = f.readlines()[:MAXLINES]
+            lines = f.readlines()
+            self.default_lines = lines[:MAXLINES] + lines[MAXLINES::1000]
 
         f_min = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_minimal.txt")
         with open(f_min, encoding="UTF-8") as f:
-            self.minimal_lines = f.readlines()[:MAXLINES]
+            lines = f.readlines()
+            self.minimal_lines = lines[:MAXLINES] + lines[MAXLINES::1000]
 
         f_var1 = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB.csv")
         with open(f_var1, encoding="UTF-8") as f:
-            self.var1_lines = f.readlines()[:MAXLINES]
+            lines = f.readlines()
+            self.var1_lines = lines[:MAXLINES] + lines[MAXLINES::1000]
 
         f_var2 = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_var2.csv")
         with open(f_var2, encoding="UTF-8") as f:
-            self.var2_lines = f.readlines()[:MAXLINES]
+            lines = f.readlines()
+            self.var2_lines = lines[:MAXLINES] + lines[MAXLINES::1000]
 
         f_pos1 = pkg_resources.resource_filename(pkg, "sample_files/hobo-positive-number-1.txt")
         with open(f_pos1, encoding="UTF-8") as f:
-            self.f_pos1 = f.readlines()[:MAXLINES]
+            lines = f.readlines()
+            self.f_pos1 = lines[:MAXLINES] + lines[MAXLINES::1000]
 
         f_pos2 = pkg_resources.resource_filename(pkg, "sample_files/hobo-positive-number-2.csv")
         with open(f_pos2, encoding="UTF-8") as f:
-            self.f_pos2 = f.readlines()[:MAXLINES]
+            lines = f.readlines()
+            self.f_pos2 = lines[:MAXLINES] + lines[MAXLINES::1000]
 
         f_pos3 = pkg_resources.resource_filename(pkg, "sample_files/hobo-positive-number-3.csv")
         with open(f_pos3, encoding="UTF-8") as f:
-            self.f_pos3 = f.readlines()[:MAXLINES]
-            
+            lines = f.readlines()
+            self.f_pos3 = lines[:MAXLINES] + lines[MAXLINES::1000]
+
         f_pos4 = pkg_resources.resource_filename(pkg, "sample_files/hobo-positive-number-4.csv")
         with open(f_pos4, encoding="UTF-8") as f:
-            self.f_pos4 = f.readlines()[:MAXLINES]
+            lines = f.readlines()
+            self.f_pos4 = lines[:MAXLINES] + lines[MAXLINES::1000]
+
+        f_neg2 = pkg_resources.resource_filename(pkg, "sample_files/hobo-negative-2.txt")
+        with open(f_neg2, encoding="UTF-8") as f:
+            lines = f.readlines()
+            self.f_neg2 = lines[:MAXLINES] + lines[MAXLINES::1000]
+
+        f_neg3 = pkg_resources.resource_filename(pkg, "sample_files/hobo-negative-3.txt")
+        with open(f_neg3, encoding="UTF-8") as f:
+            lines = f.readlines()
+            self.f_neg3 = lines[:MAXLINES] + lines[MAXLINES::1000]
 
     def test_separator(self):
         self.assertEqual(readers.HOBOProperties.detect_separator(self.classic_lines), "\t")
@@ -108,10 +127,16 @@ class TestHOBOPropertiesDetectionElements(unittest.TestCase):
         self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.var2_lines))
 
     def test_detect_positive_number_format(self):
-        self.assertEqual(readers.HOBOProperties.detect_positive_format(self.f_pos1), 1)
-        self.assertEqual(readers.HOBOProperties.detect_positive_format(self.f_pos2), 2)
-        self.assertEqual(readers.HOBOProperties.detect_positive_format(self.f_pos3), 3)
-        self.assertEqual(readers.HOBOProperties.detect_positive_format(self.f_pos4), 4)
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_pos1), (None, ".", ";", None, None))
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_pos2), (None, ",", "\t", None, None))
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_pos3), (None, ",", ";", None, None))
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_pos4), (None, " ", ",", None, None))
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_neg2), (None, ",", "\t", None, "-"))
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_neg3), (None, " ", "\t", "(", ")"))
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.classic_lines), (None, ".", "\t", "-", None))
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.default_lines), (None, ".", ",", "-", None))
+        self.assertEqual(readers.HOBOProperties._parse_number_format(self.minimal_lines), (None, ",", ";", None, None))
+    
 
 
 class TestHOBOPropertiesFullDetection(unittest.TestCase):

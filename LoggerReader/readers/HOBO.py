@@ -271,7 +271,8 @@ class HOBOProperties:
         print("Detecting file properties, this may take some time...")
 
         with open(file, encoding="UTF-8") as f:
-            lines = f.readlines()[:n_lines]
+            lines = f.readlines()
+            lines = lines[:n_lines] + lines[n_lines::1000]
 
         hobo = cls(separator=cls.detect_separator(lines),
                    include_line_number=cls.detect_line_number(lines),
@@ -536,63 +537,108 @@ class HOBOProperties:
         return True
 
     @staticmethod
-    def detect_positive_format(lines):
-        """ Detect what format positive numbers are in
-        |1| 1,234.56 | comma, period |
-        |2| 1 234,56 | space, comma  |
-        |3| 1.234,56 | comma, period |
-        |4| 1.234 56 | space, period |
-        """
-
-        pattern = re.compile(r"""   (                    # Group for one data column
-                                        (?P<neg1>[-\(])? # Possible negative sign
-                                        (\d{1,3}         # Thousands, millions, billions, etc.
+    def parse_number_format(lines):
+        """ Use regex magic to extract the characters used for various separators """
+        pattern = re.compile(r"""   (?P<sep>[\t,;])       # Column separator
+                                    (                     # Group for one data column
+                                        (?P<neg1>[-\(])?  # Possible opening negative sign
+                                        (\d{1,3}          # millions, billions or more, etc.
                                             (?P<thou>
-                                                [ ,\.]   # Separated by a thousands delimiter
+                                                [ ,\.]    # Separated by a thousands delimiter
                                             )
-                                        )*               # Zero or more times
-                                        \d{1,3}          # Hundreds, tens, ones
+                                        )?                # Zero or one times
+                                        (\d{3}(?P=thou))* # 'Sandwiched' digit triplets using same thousands separator
+                                        \d{1,3}           # Hundreds, tens, ones
                                         (?P<decimal>
-                                            [\., ]       # Separated by a decimal delimiter
+                                            [\., ]        # Separated by a decimal delimiter
                                         )
-                                        \d+              # Decimal digits (assume at least 1)
-                                        (?P<neg2>[-\)])? # Possible negative sign
-                                        (?P<sep>
-                                            [\t,;]       # Column separator
-                                        )
-                                    )+                   # Repeated for each data column
-                              """, re.VERBOSE)
+                                        \d+               # Decimal digits (assume at least 1)
+                                        (?P<neg2>[-\)])?  # Possible terminating negative sign
+                                        (?P=sep)          # The same column separator
+                                    )+                    # Repeated for each data column
+                                """, re.VERBOSE)
         
         thousands = list()
         decimals = list()
+        neg1 = list()
+        neg2 = list()
+        sep = list()
 
         for line in lines:
 
             match = pattern.search(line)
-
+            
             if match:
                 thousands += match.captures("thou")
                 decimals += match.captures("decimal")
+                neg1 += match.captures("neg1") if match.captures("neg1") else []
+                neg2 += match.captures("neg2") if match.captures("neg2") else []
+                sep += match.captures("sep")
 
         deci_sep = mode(decimals)
+        col_sep = mode(sep)
 
         try:
             thou_sep = mode(thousands)
         except StatisticsError:
-            thou_sep = ","  # Could be either
+            thou_sep = None
+
+        try:
+            negative_open = mode(neg1)
+        except StatisticsError:
+            negative_open = None
+
+        try:
+            negative_term = mode(neg2)
+        except StatisticsError:
+            negative_term = None
+
+        return thou_sep, deci_sep, col_sep, negative_open, negative_term
+
+    @staticmethod
+    def positive_number_format(thou_sep, deci_sep):
+        """ Detect what format positive numbers are in
+        |1| 1,234.56 | comma, period |
+        |2| 1 234,56 | space, comma  |
+        |3| 1.234,56 | period, comma |
+        |4| 1.234 56 | period, space |
+        """
 
         if thou_sep == "," and deci_sep == ".":
             return 1
         elif thou_sep == " " and deci_sep == ",":
             return 2
-        elif thou_sep == "," and deci_sep == ".":
+        elif thou_sep == "." and deci_sep == ",":
             return 3
         elif thou_sep == " " and deci_sep == ".":
             return 4
+        elif thou_sep is None:
+            if deci_sep == ".":
+                return 1
+            elif deci_sep == " ":
+                return 4
+        elif deci_sep is None:
+            if thou_sep == ",":
+                return 1
+            elif thou_sep == " ":
+                return 2
+
         else:
+            return None
+
+    @staticmethod
+    def negative_number_format(negative_open, negative_terminator):
+        """
+        |1| -123 | -, None |
+        |2| 123- | None, -  |
+        |3| (123) | (, ) |
+        """
+        if negative_open == "-" and negative_terminator is None:
             return 1
-
-
+        elif negative_open is None and negative_terminator == "-":
+            return 2
+        elif negative_open == "(" and negative_terminator == ")":
+            return 3
 
 
 
