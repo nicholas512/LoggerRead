@@ -1,9 +1,9 @@
 import pandas as pd
-import re
+import regex as re
 import json
 import pprint
 
-from statistics import mode
+from statistics import mode, StatisticsError
 
 from .AbstractReader import AbstractReader
 
@@ -472,7 +472,8 @@ class HOBOProperties:
     def detect_always_show_fractional_seconds(lines):
         """ Once you find a fractional second, check if all subsequent lines have them"""
         detected = False
-        pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d")
+        pattern = re.compile(r"(\d{2}:\d{2}:\d{2}\.\d|^[^\d]*$)")  # decimal seconds OR no numbers.
+        
         iterate = iter(lines)
 
         while not detected:  # Get to the first matching line
@@ -524,6 +525,7 @@ class HOBOProperties:
         else:
             return True
 
+    @staticmethod
     def detect_no_quotes_or_commas(lines):
         """ Detect whether the 'no quotes or commas' parameter is enabled """
         header = re.compile('"Date')
@@ -532,3 +534,67 @@ class HOBOProperties:
                 return False
 
         return True
+
+    @staticmethod
+    def detect_positive_format(lines):
+        """ Detect what format positive numbers are in
+        |1| 1,234.56 | comma, period |
+        |2| 1 234,56 | space, comma  |
+        |3| 1.234,56 | comma, period |
+        |4| 1.234 56 | space, period |
+        """
+
+        pattern = re.compile(r"""   (                    # Group for one data column
+                                        (?P<neg1>[-\(])? # Possible negative sign
+                                        (\d{1,3}         # Thousands, millions, billions, etc.
+                                            (?P<thou>
+                                                [ ,\.]   # Separated by a thousands delimiter
+                                            )
+                                        )*               # Zero or more times
+                                        \d{1,3}          # Hundreds, tens, ones
+                                        (?P<decimal>
+                                            [\., ]       # Separated by a decimal delimiter
+                                        )
+                                        \d+              # Decimal digits (assume at least 1)
+                                        (?P<neg2>[-\)])? # Possible negative sign
+                                        (?P<sep>
+                                            [\t,;]       # Column separator
+                                        )
+                                    )+                   # Repeated for each data column
+                              """, re.VERBOSE)
+        
+        thousands = list()
+        decimals = list()
+
+        for line in lines:
+
+            match = pattern.search(line)
+
+            if match:
+                thousands += match.captures("thou")
+                decimals += match.captures("decimal")
+
+        deci_sep = mode(decimals)
+
+        try:
+            thou_sep = mode(thousands)
+        except StatisticsError:
+            thou_sep = ","  # Could be either
+
+        if thou_sep == "," and deci_sep == ".":
+            return 1
+        elif thou_sep == " " and deci_sep == ",":
+            return 2
+        elif thou_sep == "," and deci_sep == ".":
+            return 3
+        elif thou_sep == " " and deci_sep == ".":
+            return 4
+        else:
+            return 1
+
+
+
+
+
+
+
