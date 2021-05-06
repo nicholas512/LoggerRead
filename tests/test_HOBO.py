@@ -6,54 +6,6 @@ from LoggerReader import readers
 pkg = "LoggerReader"
 
 
-class TestFG2_399(unittest.TestCase):
-
-    def setUp(self):
-        dat_fg2_399 = pkg_resources.resource_filename(pkg, "sample_files/FG2_399.csv")
-        self.reader = readers.FG2()
-        self.reader.read(dat_fg2_399)
-
-    def test_array_shape(self):
-        self.assertEqual(self.reader.get_data().shape[0], 9869)
-        self.assertEqual(self.reader.get_data().shape[1], 8)
-
-    def test_date_order(self):
-        self.assertLess(self.reader.get_data().iloc[1,0], self.reader.get_data().iloc[10,0])
-        self.assertGreater(self.reader.get_data().iloc[100,0], self.reader.get_data().iloc[10,0])
-
-
-class TestGP5W_270(unittest.TestCase):
-
-    def setUp(self):
-        dat_gp5w_270 = pkg_resources.resource_filename(pkg, "sample_files/GP5W_270.csv")
-        self.reader = readers.GP5W()
-        self.reader.read(dat_gp5w_270)
-
-    def test_array_shape(self):
-        self.assertEqual(self.reader.get_data().shape[0], 2206)
-        self.assertEqual(self.reader.get_data().shape[1], 8)
-
-    def test_date_order(self):
-        self.assertLess(self.reader.get_data().iloc[1,0], self.reader.get_data().iloc[10,0])
-        self.assertGreater(self.reader.get_data().iloc[100,0], self.reader.get_data().iloc[10,0])
-
-
-class TestGP5W_260(unittest.TestCase):
-
-    def setUp(self):
-        dat_gp5w_260 = pkg_resources.resource_filename(pkg, "sample_files/GP5W_260.csv")
-        self.reader = readers.GP5W()
-        self.reader.read(dat_gp5w_260)
-
-    def test_array_shape(self):
-        self.assertEqual(self.reader.get_data().shape[0], 1882)
-        self.assertEqual(self.reader.get_data().shape[1], 4)
-
-    def test_date_order(self):
-        self.assertLess(self.reader.get_data().iloc[1,0], self.reader.get_data().iloc[10,0])
-        self.assertGreater(self.reader.get_data().iloc[100,0], self.reader.get_data().iloc[10,0])
-
-
 class TestHoboProperties(unittest.TestCase):
 
     def setUp(self):
@@ -89,6 +41,22 @@ class TestHOBOPropertiesDetectionElements(unittest.TestCase):
         f_var2 = pkg_resources.resource_filename(pkg, "sample_files/hobo_1_AB_var2.csv")
         with open(f_var2, encoding="UTF-8") as f:
             self.var2_lines = f.readlines()[:MAXLINES]
+
+        f_pos1 = pkg_resources.resource_filename(pkg, "sample_files/hobo-positive-number-1.txt")
+        with open(f_pos1, encoding="UTF-8") as f:
+            self.f_pos1 = f.readlines()[:MAXLINES]
+
+        f_pos2 = pkg_resources.resource_filename(pkg, "sample_files/hobo-positive-number-2.csv")
+        with open(f_pos2, encoding="UTF-8") as f:
+            self.f_pos2 = f.readlines()[:MAXLINES]
+
+        f_pos3 = pkg_resources.resource_filename(pkg, "sample_files/hobo-positive-number-3.csv")
+        with open(f_pos3, encoding="UTF-8") as f:
+            self.f_pos3 = f.readlines()[:MAXLINES]
+            
+        f_pos4 = pkg_resources.resource_filename(pkg, "sample_files/hobo-positive-number-4.csv")
+        with open(f_pos4, encoding="UTF-8") as f:
+            self.f_pos4 = f.readlines()[:MAXLINES]
 
     def test_separator(self):
         self.assertEqual(readers.HOBOProperties.detect_separator(self.classic_lines), "\t")
@@ -138,6 +106,12 @@ class TestHOBOPropertiesDetectionElements(unittest.TestCase):
         self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.minimal_lines))
         self.assertFalse(readers.HOBOProperties.detect_no_quotes_or_commas(self.var1_lines))
         self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.var2_lines))
+
+    def test_detect_positive_number_format(self):
+        self.assertEqual(readers.HOBOProperties.detect_positive_format(self.f_pos1), 1)
+        self.assertEqual(readers.HOBOProperties.detect_positive_format(self.f_pos2), 2)
+        self.assertEqual(readers.HOBOProperties.detect_positive_format(self.f_pos3), 3)
+        self.assertEqual(readers.HOBOProperties.detect_positive_format(self.f_pos4), 4)
 
 
 class TestHOBOPropertiesFullDetection(unittest.TestCase):
@@ -195,7 +169,6 @@ class TestHOBOFileRead(unittest.TestCase):
         self.assertEqual(self.h_min.META['tz_offset'], "-0700")
         self.assertEqual(self.h_var1.META['tz_offset'], "-0700")
         self.assertEqual(self.h_var2.META['tz_offset'], "-0700")
-
 
 
 if __name__ == '__main__':
