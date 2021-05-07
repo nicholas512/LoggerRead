@@ -43,7 +43,7 @@ class HOBO(AbstractReader):
         with open(file, encoding="UTF-8") as f:  # Get header info
             lines = f.readlines()
         self.extract_header_from_lines(lines)
-        
+        import pdb;pdb.set_trace()
         if self.properties.include_plot_details:
             self.META['details'] = self.read_details(lines)
         
@@ -53,11 +53,13 @@ class HOBO(AbstractReader):
         self.raw_table = pd.read_csv(file, delimiter=self.properties.separator,
                                      skiprows=self.headerline_i, index_col=False)
 
-        time_col = self.create_datetime_column(self.raw_table)
-        data_col = self.extract_data_columns(self.raw_table)
+        time_df = self.create_datetime_column(self.raw_table)
+        data_df = self.extract_data_columns(self.raw_table)
+        
+        self.convert_number_format(data_df)
 
-        self.DATA = pd.concat([time_col, data_col], axis=1)
-        self.DATA.columns = ["TIME"] + list(data_col.columns)
+        self.DATA = pd.concat([time_df, data_df], axis=1)
+        self.DATA.columns = ["TIME"] + list(data_df.columns)
 
         return self.DATA
 
@@ -118,10 +120,12 @@ class HOBO(AbstractReader):
     def extract_data_columns(self, df):
         """ Return a subset of a dataframe containing only data columns """
         keep = list()
-        for col in df.columns:
-            if self.is_data_header(col):
-                keep.append(col)
-        return df[keep]
+        
+        for column_name in df.columns:
+            if self.is_data_header(column_name):
+                keep.append(column_name)
+        
+        return df.loc[:, keep]
 
     def create_datetime_column(self, df):
         """ Create a pandas datetime Series from a HOBO dataframe """
@@ -135,7 +139,7 @@ class HOBO(AbstractReader):
             time_pattern = re.compile("Time")
             time_header = next(filter(time_pattern.search, df.columns))
 
-            full_date = df[date_header] + df[time_header] + tz
+            full_date = df.loc[:, date_header] + df.loc[:, time_header] + tz
 
             date_fmt = self.properties.date_pattern() + self.properties.time_pattern() + tzfmt
             TIME = pd.to_datetime(full_date, format=date_fmt)
@@ -144,7 +148,7 @@ class HOBO(AbstractReader):
             datetime_pattern = re.compile("Date Time")
             datetime_header = next(filter(datetime_pattern.search, df.columns))
 
-            full_date = df[datetime_header] + tz
+            full_date = df.loc[:, datetime_header] + tz
             date_fmt = self.properties.date_pattern() + tzfmt
             TIME = pd.to_datetime(full_date, format=date_fmt)
 
@@ -173,6 +177,25 @@ class HOBO(AbstractReader):
                 break
 
         return details
+
+    def convert_number_format(self, df):
+        """ Convert numeric-style text to strings """
+        # map(lambda x: self.convert_series_number_format(df[x]), df)
+        for col in df.columns:
+            df.loc[:, col] = self.convert_series_number_format(df.loc[:, col])
+
+    def convert_series_number_format(self, series):
+        """ Convert pandas series to numeric after """
+        if hasattr(series, 'str'):
+            if self.properties.thousands_separator:
+                series = series.str.replace(self.properties.thousands_separator, "")
+            if self.properties.decimal_separator != '.':
+                series = series.str.replace(self.properties.decimal_separator, ".")
+
+            series = series.str.replace(r"(\((\d*\.\d*)\)|(\d*\.\d*)-)", r"-\2", regex=True)
+
+        return series
+        return pd.to_numeric(series)
 
 
 class HOBOProperties:
@@ -696,8 +719,8 @@ class HOBOProperties:
 
     @positive_number_format.setter
     def positive_number_format(self, val):
-        if val not in [self.POS_N_FMT, None]:
-            raise ValueError(f"Positive number format must be in {self.POS_N_FMT}")
+        if val not in self.POS_N_FMT + [None]:
+            raise ValueError(f"Positive number format must be in {self.POS_N_FMT} (Not {val})")
         
         self._positive_number_format = val
 

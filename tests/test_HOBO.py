@@ -127,16 +127,15 @@ class TestHOBOPropertiesDetectionElements(unittest.TestCase):
         self.assertTrue(readers.HOBOProperties.detect_no_quotes_or_commas(self.var2_lines))
 
     def test_detect_positive_number_format(self):
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_pos1), (None, ".", ";", None, None))
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_pos2), (None, ",", "\t", None, None))
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_pos3), (None, ",", ";", None, None))
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_pos4), (None, " ", ",", None, None))
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_neg2), (None, ",", "\t", None, "-"))
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.f_neg3), (None, " ", "\t", "(", ")"))
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.classic_lines), (None, ".", "\t", "-", None))
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.default_lines), (None, ".", ",", "-", None))
-        self.assertEqual(readers.HOBOProperties._parse_number_format(self.minimal_lines), (None, ",", ";", None, None))
-    
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.f_pos1), (None, ".", ";", None, None))
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.f_pos2), (None, ",", "\t", None, None))
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.f_pos3), (None, ",", ";", None, None))
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.f_pos4), (None, " ", ",", None, None))
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.f_neg2), (None, ",", "\t", None, "-"))
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.f_neg3), (None, " ", "\t", "(", ")"))
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.classic_lines), (None, ".", "\t", "-", None))
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.default_lines), (None, ".", ",", "-", None))
+        self.assertEqual(readers.HOBOProperties.parse_number_format(self.minimal_lines), (None, ",", ";", None, None))
 
 
 class TestHOBOPropertiesFullDetection(unittest.TestCase):
