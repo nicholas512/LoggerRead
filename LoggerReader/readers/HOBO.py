@@ -43,7 +43,7 @@ class HOBO(AbstractReader):
         with open(file, encoding="UTF-8") as f:  # Get header info
             lines = f.readlines()
         self.extract_header_from_lines(lines)
-        import pdb;pdb.set_trace()
+
         if self.properties.include_plot_details:
             self.META['details'] = self.read_details(lines)
         
@@ -194,7 +194,6 @@ class HOBO(AbstractReader):
 
             series = series.str.replace(r"(\((\d*\.\d*)\)|(\d*\.\d*)-)", r"-\2", regex=True)
 
-        return series
         return pd.to_numeric(series)
 
 

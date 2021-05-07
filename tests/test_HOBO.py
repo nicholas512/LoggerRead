@@ -194,6 +194,9 @@ class TestHOBOFileRead(unittest.TestCase):
         self.assertEqual(self.h_var1.META['tz_offset'], "-0700")
         self.assertEqual(self.h_var2.META['tz_offset'], "-0700")
 
+    def test_values(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
