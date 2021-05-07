@@ -50,8 +50,8 @@ class HOBO(AbstractReader):
         self.set_tz_offset()
         
         # Read remaining data as pd DataFrame
-        self.raw_table = pd.read_csv(file, delimiter=self.properties.separator,
-                                     skiprows=self.headerline_i, index_col=False)
+        self.raw_table = self.safe_read(file, delimiter=self.properties.separator,
+                                        headerline_i=self.headerline_i)
 
         time_df = self.create_datetime_column(self.raw_table)
         data_df = self.extract_data_columns(self.raw_table)
@@ -62,6 +62,20 @@ class HOBO(AbstractReader):
         self.DATA.columns = ["TIME"] + list(data_df.columns)
 
         return self.DATA
+
+    def safe_read(self, file, delimiter, headerline_i):
+        """ handle edge cases when reading csv """
+        if (self.properties.no_quotes_or_commas
+            and self.properties.separator == ','
+            and self.properties.include_logger_serial
+            and self.properties.include_sensor_serial):  
+            raise IOError("Bad file (can't have comma separators, no quotes in header and both logger and sensor serial)")
+            # pattern = re.compile(r"LGR S/N:\s*(?P<serial>\d+),\s*#(?P=serial))")
+            # check header, replace, handle extra rows with details
+
+        else:
+            return pd.read_csv(file, delimiter=delimiter,
+                               skiprows=headerline_i, index_col=False)
 
     def extract_header_from_lines(self, lines):
         """ Get the text and row index for the header row """
