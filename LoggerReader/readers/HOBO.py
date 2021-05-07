@@ -177,8 +177,8 @@ class HOBO(AbstractReader):
 
 class HOBOProperties:
     DATE_FORMATS = ["MDY", "YMD", "DMY"]
-    POS_N_FMT = [""]
-    NEG_N_FMT = [""]
+    POS_N_FMT = [1,2,3,4]
+    NEG_N_FMT = [1,2,3]
 
     DEFAULTS = {"separator": ",",
                 "include_line_number": True,
@@ -273,6 +273,8 @@ class HOBOProperties:
         with open(file, encoding="UTF-8") as f:
             lines = f.readlines()
             lines = lines[:n_lines] + lines[n_lines::1000]
+        
+        thou_sep, deci_sep, col_sep, negative_open, negative_term = cls.parse_number_format(lines)
 
         hobo = cls(separator=cls.detect_separator(lines),
                    include_line_number=cls.detect_line_number(lines),
@@ -285,10 +287,14 @@ class HOBOProperties:
                    date_format=cls.detect_date_format(lines),
                    date_separator=cls.detect_date_separator(lines),
                    time_format_24hr=cls.detect_time_format_24hr(lines),
-                   # positive_number_format=1,
-                   # negative_number_format=1,
+                   positive_number_format=cls.evaluate_positive_number_format(thou_sep, deci_sep),
+                   negative_number_format=cls.evaluate_negative_number_format(negative_open, negative_term),
                    include_plot_details=cls.detect_include_plot_details(lines))
 
+        if hobo.positive_number_format is None:
+            hobo.thousands_separator = thou_sep
+            hobo.decimal_separator = deci_sep
+        
         return hobo
 
     def date_pattern(self):
@@ -596,7 +602,7 @@ class HOBOProperties:
         return thou_sep, deci_sep, col_sep, negative_open, negative_term
 
     @staticmethod
-    def positive_number_format(thou_sep, deci_sep):
+    def evaluate_positive_number_format(thou_sep, deci_sep):
         """ Detect what format positive numbers are in
         |1| 1,234.56 | comma, period |
         |2| 1 234,56 | space, comma  |
@@ -627,7 +633,7 @@ class HOBOProperties:
             return None
 
     @staticmethod
-    def negative_number_format(negative_open, negative_terminator):
+    def evaluate_negative_number_format(negative_open, negative_terminator):
         """
         |1| -123 | -, None |
         |2| 123- | None, -  |
@@ -640,7 +646,66 @@ class HOBOProperties:
         elif negative_open == "(" and negative_terminator == ")":
             return 3
 
+    @property
+    def thousands_separator(self):
+        if hasattr(self, '_thousands_separator'):
+            return self._thousands_separator
+        elif self.positive_number_format == 1:
+            return ","
+        elif self.positive_number_format == 2:
+            return " "
+        elif self.positive_number_format == 3:
+            return "."
+        elif self.positive_number_format == 4:
+            return "."
+        else:
+            return None
+    
+    @thousands_separator.setter
+    def thousands_separator(self, val):
+        if self.positive_number_format is not None:
+            raise AttributeError("Can't set thousands separator explicitly if positive_number_format is defined")
+        else:
+            self._thousands_separator = val
+        
+    @property
+    def decimal_separator(self):
+        if hasattr(self, '_decimal_separator'):
+            return self._decimal_separator
+        elif self.positive_number_format == 1:
+            return "."
+        elif self.positive_number_format == 2:
+            return ","
+        elif self.positive_number_format == 3:
+            return ","
+        elif self.positive_number_format == 4:
+            return " "
+        else:
+            return None
 
+    @decimal_separator.setter
+    def decimal_separator(self, val):
+        if self.positive_number_format is not None:
+            raise AttributeError("Can't set decimal separator explicitly if positive_number_format is defined")
+        else:
+            self._decimal_separator = val
 
+    @property
+    def positive_number_format(self):
+        return self._positive_number_format
 
+    @positive_number_format.setter
+    def positive_number_format(self, val):
+        if val not in [self.POS_N_FMT, None]:
+            raise ValueError(f"Positive number format must be in {self.POS_N_FMT}")
+        
+        self._positive_number_format = val
 
+        if val == 1:
+            self._thousands_separator, self._decimal_separator = (",", ".")
+        elif val == 2:
+            self._thousands_separator, self._decimal_separator = (" ", ",")
+        elif val == 3:
+            self._thousands_separator, self._decimal_separator = (".", ",")
+        elif val == 4:
+            self._thousands_separator, self._decimal_separator = (".", " ")
