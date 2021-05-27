@@ -1,6 +1,6 @@
 from setuptools import setup
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 setup(
     name='LoggerReader',
@@ -20,7 +20,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        'Development Status :: 4 - Beta'          
+        'Development Status :: 4 - Beta'
     ],
     include_package_data=True,
     package_data={'LoggerReader': ['sample_files/*']}
