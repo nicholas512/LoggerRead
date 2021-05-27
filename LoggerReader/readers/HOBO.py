@@ -69,7 +69,7 @@ class HOBO(AbstractReader):
             and self.properties.separator == ','
             and self.properties.include_logger_serial
             and self.properties.include_sensor_serial):  
-            raise IOError("Bad file (can't have comma separators, no quotes in header and both logger and sensor serial)")
+            raise IOError("Bad file (can't have comma separators, no quotes in header, and both logger and sensor serial numbers)")
             # pattern = re.compile(r"LGR S/N:\s*(?P<serial>\d+),\s*#(?P=serial))")
             # check header, replace, handle extra rows with details
 
