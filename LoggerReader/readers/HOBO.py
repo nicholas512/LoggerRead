@@ -1,9 +1,9 @@
 import pandas as pd
-import re
+import regex as re
 import json
 import pprint
 
-from statistics import mode
+from statistics import mode, StatisticsError
 
 from .AbstractReader import AbstractReader
 
@@ -43,23 +43,39 @@ class HOBO(AbstractReader):
         with open(file, encoding="UTF-8") as f:  # Get header info
             lines = f.readlines()
         self.extract_header_from_lines(lines)
-        
+
         if self.properties.include_plot_details:
             self.META['details'] = self.read_details(lines)
         
         self.set_tz_offset()
         
         # Read remaining data as pd DataFrame
-        self.raw_table = pd.read_csv(file, delimiter=self.properties.separator,
-                                     skiprows=self.headerline_i, index_col=False)
+        self.raw_table = self.safe_read(file, delimiter=self.properties.separator,
+                                        headerline_i=self.headerline_i)
 
-        time_col = self.create_datetime_column(self.raw_table)
-        data_col = self.extract_data_columns(self.raw_table)
+        time_df = self.create_datetime_column(self.raw_table)
+        data_df = self.extract_data_columns(self.raw_table)
+        
+        self.convert_number_format(data_df)
 
-        self.DATA = pd.concat([time_col, data_col], axis=1)
-        self.DATA.columns = ["TIME"] + list(data_col.columns)
+        self.DATA = pd.concat([time_df, data_df], axis=1)
+        self.DATA.columns = ["TIME"] + list(data_df.columns)
 
         return self.DATA
+
+    def safe_read(self, file, delimiter, headerline_i):
+        """ handle edge cases when reading csv """
+        if (self.properties.no_quotes_or_commas
+            and self.properties.separator == ','
+            and self.properties.include_logger_serial
+            and self.properties.include_sensor_serial):  
+            raise IOError("Bad file (can't have comma separators, no quotes in header, and both logger and sensor serial numbers)")
+            # pattern = re.compile(r"LGR S/N:\s*(?P<serial>\d+),\s*#(?P=serial))")
+            # check header, replace, handle extra rows with details
+
+        else:
+            return pd.read_csv(file, delimiter=delimiter,
+                               skiprows=headerline_i, index_col=False)
 
     def extract_header_from_lines(self, lines):
         """ Get the text and row index for the header row """
@@ -118,10 +134,12 @@ class HOBO(AbstractReader):
     def extract_data_columns(self, df):
         """ Return a subset of a dataframe containing only data columns """
         keep = list()
-        for col in df.columns:
-            if self.is_data_header(col):
-                keep.append(col)
-        return df[keep]
+        
+        for column_name in df.columns:
+            if self.is_data_header(column_name):
+                keep.append(column_name)
+        
+        return df.loc[:, keep]
 
     def create_datetime_column(self, df):
         """ Create a pandas datetime Series from a HOBO dataframe """
@@ -135,7 +153,7 @@ class HOBO(AbstractReader):
             time_pattern = re.compile("Time")
             time_header = next(filter(time_pattern.search, df.columns))
 
-            full_date = df[date_header] + df[time_header] + tz
+            full_date = df.loc[:, date_header] + df.loc[:, time_header] + tz
 
             date_fmt = self.properties.date_pattern() + self.properties.time_pattern() + tzfmt
             TIME = pd.to_datetime(full_date, format=date_fmt)
@@ -144,7 +162,7 @@ class HOBO(AbstractReader):
             datetime_pattern = re.compile("Date Time")
             datetime_header = next(filter(datetime_pattern.search, df.columns))
 
-            full_date = df[datetime_header] + tz
+            full_date = df.loc[:, datetime_header] + tz
             date_fmt = self.properties.date_pattern() + tzfmt
             TIME = pd.to_datetime(full_date, format=date_fmt)
 
@@ -174,11 +192,29 @@ class HOBO(AbstractReader):
 
         return details
 
+    def convert_number_format(self, df):
+        """ Convert numeric-style text to strings """
+        # map(lambda x: self.convert_series_number_format(df[x]), df)
+        for col in df.columns:
+            df.loc[:, col] = self.convert_series_number_format(df.loc[:, col])
+
+    def convert_series_number_format(self, series):
+        """ Convert pandas series to numeric after """
+        if hasattr(series, 'str'):
+            if self.properties.thousands_separator:
+                series = series.str.replace(self.properties.thousands_separator, "")
+            if self.properties.decimal_separator != '.':
+                series = series.str.replace(self.properties.decimal_separator, ".")
+
+            series = series.str.replace(r"(\((\d*\.\d*)\)|(\d*\.\d*)-)", r"-\2", regex=True)
+
+        return pd.to_numeric(series)
+
 
 class HOBOProperties:
     DATE_FORMATS = ["MDY", "YMD", "DMY"]
-    POS_N_FMT = [""]
-    NEG_N_FMT = [""]
+    POS_N_FMT = [1,2,3,4]
+    NEG_N_FMT = [1,2,3]
 
     DEFAULTS = {"separator": ",",
                 "include_line_number": True,
@@ -271,7 +307,10 @@ class HOBOProperties:
         print("Detecting file properties, this may take some time...")
 
         with open(file, encoding="UTF-8") as f:
-            lines = f.readlines()[:n_lines]
+            lines = f.readlines()
+            lines = lines[:n_lines] + lines[n_lines::1000]
+        
+        thou_sep, deci_sep, col_sep, negative_open, negative_term = cls.parse_number_format(lines)
 
         hobo = cls(separator=cls.detect_separator(lines),
                    include_line_number=cls.detect_line_number(lines),
@@ -284,10 +323,14 @@ class HOBOProperties:
                    date_format=cls.detect_date_format(lines),
                    date_separator=cls.detect_date_separator(lines),
                    time_format_24hr=cls.detect_time_format_24hr(lines),
-                   # positive_number_format=1,
-                   # negative_number_format=1,
+                   positive_number_format=cls.evaluate_positive_number_format(thou_sep, deci_sep),
+                   negative_number_format=cls.evaluate_negative_number_format(negative_open, negative_term),
                    include_plot_details=cls.detect_include_plot_details(lines))
 
+        if hobo.positive_number_format is None:
+            hobo.thousands_separator = thou_sep
+            hobo.decimal_separator = deci_sep
+        
         return hobo
 
     def date_pattern(self):
@@ -472,7 +515,8 @@ class HOBOProperties:
     def detect_always_show_fractional_seconds(lines):
         """ Once you find a fractional second, check if all subsequent lines have them"""
         detected = False
-        pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d")
+        pattern = re.compile(r"(\d{2}:\d{2}:\d{2}\.\d|^[^\d]*$)")  # decimal seconds OR no numbers.
+        
         iterate = iter(lines)
 
         while not detected:  # Get to the first matching line
@@ -524,6 +568,7 @@ class HOBOProperties:
         else:
             return True
 
+    @staticmethod
     def detect_no_quotes_or_commas(lines):
         """ Detect whether the 'no quotes or commas' parameter is enabled """
         header = re.compile('"Date')
@@ -532,3 +577,171 @@ class HOBOProperties:
                 return False
 
         return True
+
+    @staticmethod
+    def parse_number_format(lines):
+        """ Use regex magic to extract the characters used for various separators """
+        pattern = re.compile(r"""   (?P<sep>[\t,;])       # Column separator
+                                    (                     # Group for one data column
+                                        (?P<neg1>[-\(])?  # Possible opening negative sign
+                                        (\d{1,3}          # millions, billions or more, etc.
+                                            (?P<thou>
+                                                [ ,\.]    # Separated by a thousands delimiter
+                                            )
+                                        )?                # Zero or one times
+                                        (\d{3}(?P=thou))* # 'Sandwiched' digit triplets using same thousands separator
+                                        \d{1,3}           # Hundreds, tens, ones
+                                        (?P<decimal>
+                                            [\., ]        # Separated by a decimal delimiter
+                                        )
+                                        \d+               # Decimal digits (assume at least 1)
+                                        (?P<neg2>[-\)])?  # Possible terminating negative sign
+                                        (?P=sep)          # The same column separator
+                                    )+                    # Repeated for each data column
+                                """, re.VERBOSE)
+        
+        thousands = list()
+        decimals = list()
+        neg1 = list()
+        neg2 = list()
+        sep = list()
+
+        for line in lines:
+
+            match = pattern.search(line)
+            
+            if match:
+                thousands += match.captures("thou")
+                decimals += match.captures("decimal")
+                neg1 += match.captures("neg1") if match.captures("neg1") else []
+                neg2 += match.captures("neg2") if match.captures("neg2") else []
+                sep += match.captures("sep")
+
+        deci_sep = mode(decimals)
+        col_sep = mode(sep)
+
+        try:
+            thou_sep = mode(thousands)
+        except StatisticsError:
+            thou_sep = None
+
+        try:
+            negative_open = mode(neg1)
+        except StatisticsError:
+            negative_open = None
+
+        try:
+            negative_term = mode(neg2)
+        except StatisticsError:
+            negative_term = None
+
+        return thou_sep, deci_sep, col_sep, negative_open, negative_term
+
+    @staticmethod
+    def evaluate_positive_number_format(thou_sep, deci_sep):
+        """ Detect what format positive numbers are in
+        |1| 1,234.56 | comma, period |
+        |2| 1 234,56 | space, comma  |
+        |3| 1.234,56 | period, comma |
+        |4| 1.234 56 | period, space |
+        """
+
+        if thou_sep == "," and deci_sep == ".":
+            return 1
+        elif thou_sep == " " and deci_sep == ",":
+            return 2
+        elif thou_sep == "." and deci_sep == ",":
+            return 3
+        elif thou_sep == " " and deci_sep == ".":
+            return 4
+        elif thou_sep is None:
+            if deci_sep == ".":
+                return 1
+            elif deci_sep == " ":
+                return 4
+        elif deci_sep is None:
+            if thou_sep == ",":
+                return 1
+            elif thou_sep == " ":
+                return 2
+
+        else:
+            return None
+
+    @staticmethod
+    def evaluate_negative_number_format(negative_open, negative_terminator):
+        """
+        |1| -123 | -, None |
+        |2| 123- | None, -  |
+        |3| (123) | (, ) |
+        """
+        if negative_open == "-" and negative_terminator is None:
+            return 1
+        elif negative_open is None and negative_terminator == "-":
+            return 2
+        elif negative_open == "(" and negative_terminator == ")":
+            return 3
+
+    @property
+    def thousands_separator(self):
+        if hasattr(self, '_thousands_separator'):
+            return self._thousands_separator
+        elif self.positive_number_format == 1:
+            return ","
+        elif self.positive_number_format == 2:
+            return " "
+        elif self.positive_number_format == 3:
+            return "."
+        elif self.positive_number_format == 4:
+            return "."
+        else:
+            return None
+    
+    @thousands_separator.setter
+    def thousands_separator(self, val):
+        if self.positive_number_format is not None:
+            raise AttributeError("Can't set thousands separator explicitly if positive_number_format is defined")
+        else:
+            self._thousands_separator = val
+        
+    @property
+    def decimal_separator(self):
+        if hasattr(self, '_decimal_separator'):
+            return self._decimal_separator
+        elif self.positive_number_format == 1:
+            return "."
+        elif self.positive_number_format == 2:
+            return ","
+        elif self.positive_number_format == 3:
+            return ","
+        elif self.positive_number_format == 4:
+            return " "
+        else:
+            return None
+
+    @decimal_separator.setter
+    def decimal_separator(self, val):
+        if self.positive_number_format is not None:
+            raise AttributeError("Can't set decimal separator explicitly if positive_number_format is defined")
+        else:
+            self._decimal_separator = val
+
+    @property
+    def positive_number_format(self):
+        return self._positive_number_format
+
+    @positive_number_format.setter
+    def positive_number_format(self, val):
+        if val not in self.POS_N_FMT + [None]:
+            raise ValueError(f"Positive number format must be in {self.POS_N_FMT} (Not {val})")
+        
+        self._positive_number_format = val
+
+        if val == 1:
+            self._thousands_separator, self._decimal_separator = (",", ".")
+        elif val == 2:
+            self._thousands_separator, self._decimal_separator = (" ", ",")
+        elif val == 3:
+            self._thousands_separator, self._decimal_separator = (".", ",")
+        elif val == 4:
+            self._thousands_separator, self._decimal_separator = (".", " ")
