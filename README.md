@@ -20,17 +20,17 @@ python setup.py develop
 Consider using a virtual environment, because some dependencies are installed.
 
 # Using LoggerReader
-The object that is used to read the logger data will differ depending on what kind of instrument the data comes from. However, each reader follows the same behaviour. They all have the `.read()` method that takes the file name as an argument. You can create the reader object first and then call the `.read()` method, or just run everything on one line.
+The class used to read logger data must be selected depending on what kind of instrument the data comes from. However, each reader behaves the same way. They all have the `.read()` method that takes the file name as an argument. You can create a reader first and then call the `.read()` method, or just run everything on one line. For Geoprecision FG for instance:
 
 ```python
-Reader().read(file)
+FG2().read(file)
 ```
 **OR**
 ```python
-reader = Reader()
+reader = FG2()
 data = reader.read(file)
 ```
-Some datalogger types may accept or require other information in order to read the file correctly.
+Some datalogger types may require other information in order to read the file correctly.
 
 ## GeoPrecision
 Geoprecision logger format differs between the FG2 and GP5W variants. To read a GeoPrecision file, use either the FG2 or GP5W object
